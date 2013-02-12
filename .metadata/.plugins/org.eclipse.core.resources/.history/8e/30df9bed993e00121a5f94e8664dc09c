@@ -1,0 +1,334 @@
+package alex.veit.bookreadingstats;
+
+import java.util.ArrayList;
+
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class BookStats implements Parcelable {
+
+	String _name;
+	long _id;
+	int _totalPages;
+	int _pagesRed;
+	int _minutes;
+	int _hours;
+	boolean _hasNewSessions;
+	ArrayList<Session> _sessions;
+	boolean _needsUpdate;
+
+	public static final String _CLASS = "BookStats";
+
+	public static final Parcelable.Creator<BookStats> CREATOR = new Parcelable.Creator<BookStats>() {
+		@Override
+		public BookStats createFromParcel(final Parcel in) {
+			return new BookStats(in);
+		}
+
+		@Override
+		public BookStats[] newArray(final int size) {
+			return new BookStats[size];
+		}
+	};
+
+	public BookStats() {
+		this._sessions = new ArrayList<Session>();
+		this._name = "";
+		this._id = -1;
+		this._totalPages = 0;
+		this._pagesRed = 0;
+		this._minutes = 0;
+		this._hours = 0;
+		this._hasNewSessions = false;
+		this._needsUpdate = false;
+	}
+
+	public BookStats(final Parcel in) {
+
+		this();
+		final int[] intData = new int[4];
+		final boolean[] hasNew = new boolean[2];
+
+		this._id = in.readLong();
+		in.readIntArray(intData);
+		this._totalPages = intData[0];
+		this._pagesRed = intData[1];
+		this._minutes = intData[2];
+		this._hours = intData[3];
+		in.readTypedList(this._sessions, Session.CREATOR);
+		this._name = in.readString();
+		in.readBooleanArray(hasNew);
+		this._hasNewSessions = hasNew[0];
+		this._needsUpdate = hasNew[1];
+
+	}
+
+	public boolean addSession(final long elapsedMillis) {
+		if (elapsedMillis >= 60) {
+			int hour = 0, minute = 0;
+			String sHour = "", sMinute = "";
+			long elapsedSeconds = elapsedMillis;
+			do
+				if (elapsedSeconds >= 60) {
+					minute++;
+					elapsedSeconds -= 60;
+				}
+			while (elapsedSeconds >= 60);
+
+			do
+				if (minute >= 60) {
+					hour++;
+					minute -= 60;
+				}
+			while (minute >= 60);
+
+			if (hour < 10)
+				sHour = "0" + hour;
+			else
+				sHour = Integer.toString(hour);
+
+			if (minute < 10)
+				sMinute = "0" + minute;
+			else
+				sMinute = Long.toString(minute);
+
+			final Session ses = new Session(-1, "Session #"
+					+ (this._sessions.size() + 1) + " - " + sHour + ":"
+					+ sMinute);
+			this._sessions.add(ses);
+
+			this._hours += hour;
+			this._minutes += minute;
+
+			if (this._minutes > 59) {
+				this._hours++;
+				this._minutes -= 60;
+			}
+			this._hasNewSessions = true;
+			this._needsUpdate = true;
+
+			return true;
+		}
+		return false;
+
+	}
+
+	public boolean addSession(final String string) {
+		if (string.length() == 4) {
+			final int minute = Integer.parseInt(string.substring(2, 4));
+			if (minute < 60) {
+				final int hour = Integer.parseInt(string.substring(0, 2));
+				final Session ses = new Session(-1, "Session #"
+						+ (this._sessions.size() + 1) + " - "
+						+ string.substring(0, 2) + ":" + string.substring(2, 4));
+				this._sessions.add(ses);
+				this._hours += hour;
+				this._minutes += minute;
+				if (this._minutes > 59) {
+					this._hours++;
+					this._minutes -= 60;
+				}
+				this._hasNewSessions = true;
+				this._needsUpdate = true;
+
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public int addSession(final String sh, final String sm) {
+
+		int testMin, testHour;
+
+		if (!sm.isEmpty())
+			testMin = Integer.parseInt(sm);
+		else
+			testMin = 0;
+
+		if (!sh.isEmpty())
+			testHour = Integer.parseInt(sh);
+		else
+			testHour = 0;
+
+		if ((testHour == 0) && (testMin == 0))
+			return -1;
+
+		if (testMin < 60) {
+
+			String sHour, sMinute;
+			if (testHour < 10)
+				sHour = "0" + testHour;
+			else
+				sHour = Integer.toString(testHour);
+
+			if (testMin < 10)
+				sMinute = "0" + testMin;
+			else
+				sMinute = Long.toString(testMin);
+
+			final Session ses = new Session(-1, "Session #"
+					+ (this._sessions.size() + 1) + " - " + sHour + ":"
+					+ sMinute);
+			this._sessions.add(ses);
+
+			this._hours += testHour;
+			this._minutes += testMin;
+
+			if (this._minutes > 59) {
+				this._hours++;
+				this._minutes -= 60;
+			}
+			this._hasNewSessions = true;
+			this._needsUpdate = true;
+
+			return 1;
+		}
+		return -2;
+
+	}
+
+	@Override
+	public int describeContents() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	protected int[] EstimatedReadTimeBundle() {
+
+		double estimate = this.EstimatedReadTimeDouble();
+
+		int hours = 0, minutes = 0;
+
+		do
+			if (estimate >= 60) {
+				hours++;
+				estimate -= 60;
+			}
+		while (estimate >= 60);
+
+		minutes = (int) estimate;
+
+		return new int[] { hours, minutes };
+	}
+
+	protected double EstimatedReadTimeDouble() {
+		double estimate;
+
+		if (this._pagesRed != 0)
+			estimate = (double) (this.getElapsedInt() * this._totalPages)
+					/ (double) this._pagesRed;
+		else
+			estimate = 0;
+		return estimate;
+	}
+
+	public String getDoublePercentageString() {
+		if (this._totalPages != 0)
+			return Double.toString((double) (this._pagesRed * 100)
+					/ this._totalPages);
+		else
+			return "0";
+	}
+
+	protected int getElapsedInt() {
+		return (this._hours * 60) + this._minutes;
+	}
+
+	public String getElapsedTimeString() {
+		String minutes;
+		String hours;
+		if (this._minutes < 10)
+			minutes = "0" + this._minutes;
+		else
+			minutes = Integer.toString(this._minutes);
+		if (this._hours < 10)
+			hours = "0" + this._hours;
+		else
+			hours = Integer.toString(this._hours);
+		return hours + ":" + minutes;
+	}
+
+	public String getEystimatedReadTimeString() {
+
+		final int[] time = this.EstimatedReadTimeBundle();
+		final int hours = time[0], minutes = time[1];
+		String h = "00", m = "00";
+
+		if (hours < 10)
+			h = "0" + hours;
+		else
+			h = Integer.toString(hours);
+
+		if (minutes < 10)
+			m = "0" + minutes;
+		else
+			m = Integer.toString(minutes);
+		return h + ":" + m;
+	}
+
+	public String getEstimatedTimeLeftString() {
+
+		String h = "00", m = "00";
+		final int elapsed = this.getElapsedInt();
+		final double estimated = this.EstimatedReadTimeDouble();
+
+		int left = (int) (estimated - elapsed);
+
+		int hours = 0, minutes = 0;
+
+		if (!(left < 0)) {
+			do
+				if (left >= 60) {
+					hours++;
+					left -= 60;
+				}
+			while (left >= 60);
+
+			minutes = left;
+
+			if (hours < 10)
+				h = "0" + hours;
+			else
+				h = Integer.toString(hours);
+
+			if (minutes < 10)
+				m = "0" + minutes;
+			else
+				m = Integer.toString(minutes);
+		}
+
+		return h + ":" + m;
+	}
+
+	public double getIntPercentage() {
+		if (this._totalPages != 0)
+			return (this._pagesRed * 100) / this._totalPages;
+		else
+			return 0;
+	}
+
+	public String getIntPercentageString() {
+		if (this._totalPages != 0)
+			return Integer.toString((this._pagesRed * 100) / this._totalPages);
+		else
+			return "0";
+	}
+
+	@Override
+	public String toString() {
+		return this._name;
+	}
+
+	@Override
+	public void writeToParcel(final Parcel dest, final int flags) {
+		// TODO Auto-generated method stub
+		dest.writeLong(this._id);
+		dest.writeIntArray(new int[] { this._totalPages, this._pagesRed,
+				this._minutes, this._hours });
+		dest.writeTypedList(this._sessions);
+		dest.writeString(this._name);
+		dest.writeBooleanArray(new boolean[] { this._hasNewSessions,
+				this._needsUpdate });
+	}
+}

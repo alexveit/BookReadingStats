@@ -1,0 +1,60 @@
+package alex.veit.bookreadingstats;
+
+import android.os.Parcel;
+import android.os.Parcelable;
+
+public class Session implements Parcelable {
+	
+	public static final Creator<Session> CREATOR = new Creator<Session>() {
+
+		@Override
+		public Session createFromParcel(final Parcel source) {
+			return new Session(source);
+		}
+
+		@Override
+		public Session[] newArray(final int size) {
+			return new Session[size];
+		}
+	};
+	
+	int _id;
+	int _minutes;
+	int _hours;
+	String _value;
+
+	public Session(final int id, final String value, final int hrs,
+			final int mns) {
+		this._id = id;
+		this._value = value;
+		this._hours = hrs;
+		this._minutes = mns;
+	}
+
+	public Session(final Parcel in) {
+		this._id = in.readInt();
+		this._hours = in.readInt();
+		this._minutes = in.readInt();
+		this._value = in.readString();
+	}
+
+	@Override
+	public int describeContents() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public String toString() {
+		return this._value;
+	}
+
+	@Override
+	public void writeToParcel(final Parcel dest, final int flags) {
+		dest.writeInt(this._id);
+		dest.writeInt(this._hours);
+		dest.writeInt(this._minutes);
+		dest.writeString(this._value);
+
+	}
+}

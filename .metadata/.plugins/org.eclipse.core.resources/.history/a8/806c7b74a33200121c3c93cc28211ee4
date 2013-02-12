@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">BookReadingStats</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="menu_settings">Settings</string>
+    <string name="bookName">Book Name:</string>
+    <string name="totalPages">Total Pages:</string>
+    <string name="pagesRed">Pages Red:</string>
+
+</resources>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;activity_main_context.xml&apos; to &apos;activity_main_context.xml&apos;&#x0D;&#x0A;- Original project: &apos;Book Reading Stats&apos;&#x0D;&#x0A;- Destination element: &apos;activity_main_context.xml&apos;&#x0D;&#x0A;- Original element: &apos;activity_main_context.xml&apos;" description="Copy file" element1="res/menu/activity_main_context.xml" files="1" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1360613166044" target="/Book Reading Stats/res/menu/activity_main_context.xml" units="0" version="1.0"/>
+</session>

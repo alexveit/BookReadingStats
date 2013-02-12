@@ -1,0 +1,78 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Sessions" >
+
+    <ListView
+        android:id="@+id/listViewSessions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/buttonCancelSes"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/buttonStartSes" >
+    </ListView>
+    
+    <Button
+        android:id="@+id/buttonCancelSes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:onClick="cancel"
+        android:text="@android:string/cancel" />
+
+    <Button
+        android:id="@+id/buttonDoneSes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_toRightOf="@+id/buttonCancelSes"
+        android:onClick="done"
+        android:text="@string/done" />
+
+    <TextView
+        android:id="@+id/textViewBookName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:text="@string/bookName"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <Button
+        android:id="@+id/buttonStartSes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/buttonManualAdd"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/textViewBookName"
+        android:layout_toRightOf="@+id/buttonManualAdd"
+        android:onClick="startSession"
+        android:text="@string/startSes" />
+
+    <Button
+        android:id="@+id/buttonManualAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/textViewBookName"
+        android:onClick="manualAdd"
+        android:text="@string/manualAdd" />
+
+    <View
+        android:layout_width="wrap_content"
+        android:layout_height="2dip"
+        android:layout_alignParentLeft="true"
+        android:layout_alignTop="@+id/buttonCancelSes"
+        android:background="@color/scarlet" />
+
+    <View
+        android:layout_width="wrap_content"
+        android:layout_height="2dip"
+        android:layout_alignBottom="@+id/buttonStartSes"
+        android:layout_alignParentLeft="true"
+        android:background="@color/scarlet" />
+
+</RelativeLayout>

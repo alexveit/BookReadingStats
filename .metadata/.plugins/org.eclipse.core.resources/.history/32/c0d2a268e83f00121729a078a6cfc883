@@ -1,0 +1,207 @@
+package alex.veit.bookreadingstats;
+
+import java.util.ArrayList;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemLongClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
+public class MainActivity extends Activity {
+
+	public class AscyncThread extends AsyncTask<Integer, Void, Integer> {
+
+		ProgressDialog _progress;
+		String _message = "";
+
+		public AscyncThread(final String msg) {
+			this._message = msg;
+		}
+
+		@Override
+		protected Integer doInBackground(final Integer... params) {
+			if (params[0] == MainActivity.INITIAL_LOAD)
+				MainActivity.this._myBooks = MainActivity.this._db
+						.getAllBooks();
+			else if (params[0] == MainActivity.DELETE_BOOK)
+				MainActivity.this._db.deleteRow(params[1]);
+			return params[0];
+		}
+
+		@Override
+		protected void onPostExecute(final Integer result) {
+			super.onPostExecute(result);
+			if (result == MainActivity.INITIAL_LOAD) {
+				MainActivity.this._adapter = new ArrayAdapter<BookStats>(
+						MainActivity.this, android.R.layout.simple_list_item_1,
+						MainActivity.this._myBooks);
+				MainActivity.this._myListView
+						.setAdapter(MainActivity.this._adapter);
+			}
+			this._progress.dismiss();
+		}
+
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			this._progress = ProgressDialog.show(MainActivity.this, "Books DB",
+					this._message, true);
+		}
+
+	}
+
+	public static final String BOOK_ID = "BOOK_ID";
+	private static final int BOOK_REQUEST_CODE = 12;
+	private static final Integer DELETE_BOOK = 2;
+	private static final Integer INITIAL_LOAD = 1;
+	public static final String UPDATE_BOOK = "UPDATE_BOOK";
+	public static final String DB_INSTANCE = "DB_INSTANCE";
+
+	private ArrayAdapter<BookStats> _adapter;
+	public BookStatsDatabaseManager _db;
+	private ArrayList<BookStats> _myBooks;
+	private ListView _myListView;
+
+	public void addBook(final View view) {
+		final Intent intent = new Intent(this, BookActivity.class);
+		intent.putExtra(MainActivity.UPDATE_BOOK, false);
+		this.startActivityForResult(intent, MainActivity.BOOK_REQUEST_CODE);
+	}
+
+	@Override
+	protected void onActivityResult(final int requestCode,
+			final int resultCode, final Intent data) {
+
+		if (resultCode == Activity.RESULT_OK) {
+			if (data.getExtras().getBoolean(MainActivity.UPDATE_BOOK))
+				this._myBooks.set(
+						(int) data.getExtras().getLong(MainActivity.BOOK_ID),
+						(BookStats) data.getParcelableExtra(BookStats._CLASS));
+			else
+				this._myBooks.add((BookStats) data
+						.getParcelableExtra(BookStats._CLASS));
+			this._adapter.notifyDataSetChanged();
+		}
+
+	}
+
+	@Override
+	protected void onCreate(final Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		this.setContentView(R.layout.activity_main);
+
+		this._db = new BookStatsDatabaseManager(this);
+		this._myListView = (ListView) this.findViewById(R.id.listViewBooks);
+		final AscyncThread task = new AscyncThread("Loading...");
+		task.execute(MainActivity.INITIAL_LOAD);
+		this._myListView.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(final AdapterView<?> parent,
+					final View view, final int position, final long id) {
+				final Intent intent = new Intent(MainActivity.this,
+						BookActivity.class);
+				intent.putExtra(MainActivity.UPDATE_BOOK, true);
+				intent.putExtra(MainActivity.BOOK_ID, id);
+				intent.putExtra(BookStats._CLASS,
+						MainActivity.this._myBooks.get((int) id));
+				MainActivity.this.startActivityForResult(intent,
+						MainActivity.BOOK_REQUEST_CODE);
+
+			}
+		});
+		this._myListView
+				.setOnItemLongClickListener(new OnItemLongClickListener() {
+
+					@Override
+					public boolean onItemLongClick(final AdapterView<?> parent,
+							final View view, final int position, final long id) {
+
+						final int thisID = (int) id;
+
+						new AlertDialog.Builder(MainActivity.this)
+								.setTitle("Delete this book?")
+								.setMessage(
+										MainActivity.this._myBooks
+												.get((int) id)._name)
+								.setPositiveButton("Yes",
+										new OnClickListener() {
+											@Override
+											public void onClick(
+													final DialogInterface arg0,
+													final int arg1) {
+												if (MainActivity.this._myBooks
+														.get(thisID)._id != -1)
+													new AscyncThread(
+															"Deleting Book")
+															.execute(new Integer[] {
+																	MainActivity.DELETE_BOOK,
+																	(int) MainActivity.this._myBooks
+																			.get(thisID)._id });
+												MainActivity.this._myBooks
+														.remove(thisID);
+												MainActivity.this._adapter
+														.notifyDataSetChanged();
+											}
+										})
+								.setNegativeButton("No", new OnClickListener() {
+									@Override
+									public void onClick(
+											final DialogInterface arg0,
+											final int arg1) {
+									}
+								}).show();
+
+						return false;
+					}
+				});
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(final Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		this.getMenuInflater().inflate(R.menu.activity_main, menu);
+		return true;
+	}
+
+	@Override
+	protected void onDestroy() {
+		this._db.close();
+		super.onDestroy();
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		if (super.isFinishing())
+			for (int i = 0; i < this._myBooks.size(); i++) {
+				if (this._myBooks.get(i)._id == -1) {
+					this._myBooks.get(i)._id = this._db
+							.addBookRow(this._myBooks.get(i));
+					this._myBooks.get(i)._needsUpdate = false;
+				}
+				if(this._myBooks.get(i)._deletedSessions.size() > 0)
+				{
+					for(int k = 0; k < this._myBooks.get(i)._deletedSessions.size(); k++)
+					{
+						this._db.deleteSession(this._myBooks.get(i)._deletedSessions.get(k));
+					}
+				}
+				if (this._myBooks.get(i)._needsUpdate)
+					this._db.updateBookRow(this._myBooks.get(i));
+				if (this._myBooks.get(i)._hasNewSessions)
+					this._db.addSessions(this._myBooks.get(i));
+			}
+	}
+}

@@ -1,0 +1,42 @@
+package alex.veit.bookreadingstats;
+
+import android.os.Bundle;
+import android.app.Activity;
+import android.view.Menu;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+
+public class HomeActivity extends Activity {
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_home);
+		
+		ListView listView = (ListView) findViewById(R.id.booksListView);
+		String[] values = new String[] { "Android", "iPhone", "WindowsMobile",
+		  "Blackberry", "WebOS", "Ubuntu", "Windows7", "Max OS X",
+		  "Linux", "OS/2" };
+
+		// First parameter - Context
+		// Second parameter - Layout for the row
+		// Third parameter - ID of the TextView to which the data is written
+		// Forth - the Array of data
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+		  android.R.layout.simple_list_item_1, android.R.id.text1, values);
+
+		// Assign adapter to ListView
+		//listView.setAdapter(adapter);
+		listView.setAdapter(new MyArrayAdapter(this, values));
+
+
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.activity_home, menu);
+		return true;
+	}
+
+}

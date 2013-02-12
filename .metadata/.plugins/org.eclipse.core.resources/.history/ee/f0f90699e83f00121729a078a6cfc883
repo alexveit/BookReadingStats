@@ -1,0 +1,257 @@
+package alex.veit.bookreadingstats;
+
+import java.util.ArrayList;
+
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+public class BookStatsDatabaseManager {
+
+	// the beginnings our SQLiteOpenHelper class
+	private class CustomSQLiteOpenHelper extends SQLiteOpenHelper {
+
+		public CustomSQLiteOpenHelper(final Context context) {
+			super(context, BookStatsDatabaseManager.DB_NAME, null,
+					BookStatsDatabaseManager.DB_VERSION);
+		}
+
+		// TODO: override the constructor and other methods for the parent class
+
+		@Override
+		public void onCreate(final SQLiteDatabase db) {
+			// the SQLite query string that will create our 3 column database
+			// table.
+			String newTableQueryString = "create table "
+					+ BookStatsDatabaseManager.TABLE_NAME + " ("
+					+ BookStatsDatabaseManager.TABLE_ROW_ID
+					+ " integer primary key autoincrement not null,"
+					+ BookStatsDatabaseManager.TABLE_ROW_NAME + " text,"
+					+ BookStatsDatabaseManager.TABLE_ROW_TOTAL_PAGES
+					+ " integer,"
+					+ BookStatsDatabaseManager.TABLE_ROW_PAGES_RED
+					+ " integer," + BookStatsDatabaseManager.TABLE_ROW_LASTSES
+					+ " integer" + ");";
+
+			// execute the query string to the database.
+			db.execSQL(newTableQueryString);
+
+			newTableQueryString = "create table "
+					+ BookStatsDatabaseManager.TABLE_NAME_TWO + " ("
+					+ BookStatsDatabaseManager.TABLE_ROW_ID
+					+ " integer primary key autoincrement not null,"
+					+ BookStatsDatabaseManager.TABLE_ROW_ID_REF + " integer,"
+					+ BookStatsDatabaseManager.TABLE_ROW_SESSIONS + " text,"
+					+ BookStatsDatabaseManager.TABLE_ROW_HOURS + " integer,"
+					+ BookStatsDatabaseManager.TABLE_ROW_MINUTES + " integer"
+					+ ");";
+
+			db.execSQL(newTableQueryString);
+
+		}
+
+		@Override
+		public void onUpgrade(final SQLiteDatabase db, final int oldVersion,
+				final int newVersion) {
+			// TODO Auto-generated method stub
+
+		}
+	}
+
+	private static final String DB_NAME = "BookStatsDB"; // the name of our
+	// database
+	private static final int DB_VERSION = 1; // the version of the database
+	// the names for our database columns
+	private static final String TABLE_NAME = "book_stats";
+
+	static final String TABLE_NAME_TWO = "book_sessions";
+	private static final String TABLE_ROW_HOURS = "hours";
+	private static final String TABLE_ROW_ID = "id";
+	static final String TABLE_ROW_ID_REF = "bookID";
+	private static final String TABLE_ROW_MINUTES = "minutes";
+	private static final String TABLE_ROW_LASTSES = "last_ses";
+	private static final String TABLE_ROW_NAME = "name";
+	private static final String TABLE_ROW_PAGES_RED = "pages_red";
+
+	static final String TABLE_ROW_SESSIONS = "sessions";
+	private static final String TABLE_ROW_TOTAL_PAGES = "total_pages";
+	SQLiteDatabase _db; // a reference to the database manager class.
+
+	Context context;
+
+	public BookStatsDatabaseManager(final Context context) {
+		this.context = context;
+
+		// create or open the database
+		final CustomSQLiteOpenHelper helper = new CustomSQLiteOpenHelper(
+				context);
+		this._db = helper.getWritableDatabase();
+	}
+
+	public long addBookRow(final BookStats bs) {
+		// this is a key value pair holder used by android's SQLite functions
+		final ContentValues valuesBook = new ContentValues();
+
+		// this is how you add a value to a ContentValues object
+		// we are passing in a key string and a value string each time
+		valuesBook.put(BookStatsDatabaseManager.TABLE_ROW_NAME, bs._name);
+		valuesBook.put(BookStatsDatabaseManager.TABLE_ROW_TOTAL_PAGES,
+				bs._totalPages);
+		valuesBook.put(BookStatsDatabaseManager.TABLE_ROW_PAGES_RED,
+				bs._pagesRed);
+		valuesBook.put(BookStatsDatabaseManager.TABLE_ROW_LASTSES,
+				bs._lastSession);
+
+		// ask the database object to insert the new data
+		try {
+			this._db.insert(BookStatsDatabaseManager.TABLE_NAME, null,
+					valuesBook);
+			final String query = "SELECT "
+					+ BookStatsDatabaseManager.TABLE_ROW_ID + " from "
+					+ BookStatsDatabaseManager.TABLE_NAME + " order by "
+					+ BookStatsDatabaseManager.TABLE_ROW_ID + " DESC limit 1";
+			final Cursor c = this._db.rawQuery(query, null);
+			if (c != null && c.moveToFirst())
+				bs._id = c.getLong(0); // The 0 is the column index, we only
+										// have 1 column, so the index is 0
+		} catch (final Exception e) {
+			Log.e("DB ERROR", e.toString()); // prints the error message to the
+												// log
+			e.printStackTrace(); // prints the stack trace to the log
+		}
+		return bs._id;
+	}
+
+	public void addSessions(final BookStats bs) {
+
+		for (int i = 0; i < bs._sessions.size(); i++)
+			if (bs._sessions.get(i)._id == -1) {
+				final ContentValues valuesSessions = new ContentValues();
+				valuesSessions.put(BookStatsDatabaseManager.TABLE_ROW_SESSIONS,
+						bs._sessions.get(i)._value);
+				valuesSessions.put(BookStatsDatabaseManager.TABLE_ROW_ID_REF,
+						bs._id);
+				valuesSessions.put(BookStatsDatabaseManager.TABLE_ROW_HOURS,
+						bs._sessions.get(i)._hours);
+				valuesSessions.put(BookStatsDatabaseManager.TABLE_ROW_MINUTES,
+						bs._sessions.get(i)._minutes);
+				this._db.insert(BookStatsDatabaseManager.TABLE_NAME_TWO, null,
+						valuesSessions);
+			}
+	}
+
+	public void close() {
+		this._db.close();
+	}
+
+	public void deleteRow(final int rowID) {
+		// ask the database manager to delete the row of given id
+		try {
+			this._db.delete(BookStatsDatabaseManager.TABLE_NAME,
+					BookStatsDatabaseManager.TABLE_ROW_ID + "=" + rowID, null);
+			this._db.delete(BookStatsDatabaseManager.TABLE_NAME_TWO,
+					BookStatsDatabaseManager.TABLE_ROW_ID_REF + "=" + rowID,
+					null);
+		} catch (final Exception e) {
+			Log.e("DB ERROR", e.toString());
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteSession(final Session session) {
+		try {
+			this._db.delete(BookStatsDatabaseManager.TABLE_NAME_TWO,
+					BookStatsDatabaseManager.TABLE_ROW_ID + "=" + session._id,
+					null);
+		} catch (final Exception e) {
+			Log.e("DB ERROR", e.toString());
+			e.printStackTrace();
+		}
+
+	}
+
+	public ArrayList<BookStats> getAllBooks() {
+
+		final ArrayList<BookStats> bsArray = new ArrayList<BookStats>();
+
+		final Cursor cursorBook = this._db.query(
+				BookStatsDatabaseManager.TABLE_NAME, new String[] {
+						BookStatsDatabaseManager.TABLE_ROW_ID,
+						BookStatsDatabaseManager.TABLE_ROW_NAME,
+						BookStatsDatabaseManager.TABLE_ROW_TOTAL_PAGES,
+						BookStatsDatabaseManager.TABLE_ROW_PAGES_RED,
+						BookStatsDatabaseManager.TABLE_ROW_LASTSES }, null,
+				null, null, null, null);
+
+		cursorBook.moveToFirst();
+
+		if (!cursorBook.isAfterLast())
+			do {
+
+				final BookStats bs = new BookStats();
+				bs._id = cursorBook.getLong(0);
+				bs._name = cursorBook.getString(1);
+				bs._totalPages = cursorBook.getInt(2);
+				bs._pagesRed = cursorBook.getInt(3);
+				bs._lastSession = cursorBook.getInt(4);
+
+				final Cursor cursorSessions = this._db.query(
+						BookStatsDatabaseManager.TABLE_NAME_TWO, new String[] {
+								BookStatsDatabaseManager.TABLE_ROW_ID,
+								BookStatsDatabaseManager.TABLE_ROW_ID_REF,
+								BookStatsDatabaseManager.TABLE_ROW_SESSIONS,
+								BookStatsDatabaseManager.TABLE_ROW_HOURS,
+								BookStatsDatabaseManager.TABLE_ROW_MINUTES },
+						BookStatsDatabaseManager.TABLE_ROW_ID_REF + "='"
+								+ bs._id + "'", null, null, null, null);
+				cursorSessions.moveToFirst();
+				if (!cursorSessions.isAfterLast()) {
+					final ArrayList<Session> sessions = new ArrayList<Session>();
+					do {
+						final Session ses = new Session(
+								cursorSessions.getInt(0),
+								cursorSessions.getString(2),
+								cursorSessions.getInt(3),
+								cursorSessions.getInt(4));
+						sessions.add(ses);
+					} while (cursorSessions.moveToNext());
+					bs._sessions.addAll(sessions);
+				}
+
+				bsArray.add(bs);
+			}
+			// move the cursor's pointer up one position.
+			while (cursorBook.moveToNext());
+
+		return bsArray;
+	}
+
+	public void updateBookRow(final BookStats bookStats) {
+
+		// this is a key value pair holder used by android's SQLite functions
+		final ContentValues values = new ContentValues();
+		values.put(BookStatsDatabaseManager.TABLE_ROW_NAME, bookStats._name);
+		values.put(BookStatsDatabaseManager.TABLE_ROW_TOTAL_PAGES,
+				bookStats._totalPages);
+		values.put(BookStatsDatabaseManager.TABLE_ROW_PAGES_RED,
+				bookStats._pagesRed);
+		values.put(BookStatsDatabaseManager.TABLE_ROW_LASTSES,
+				bookStats._lastSession);
+
+		// ask the database object to update the database row of given rowID
+		try {
+			this._db.update(
+					BookStatsDatabaseManager.TABLE_NAME,
+					values,
+					BookStatsDatabaseManager.TABLE_ROW_ID + "=" + bookStats._id,
+					null);
+		} catch (final Exception e) {
+			Log.e("DB Error", e.toString());
+			e.printStackTrace();
+		}
+
+	}
+}
