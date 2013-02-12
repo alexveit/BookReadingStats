@@ -1,5 +1,0 @@
-package de.vogella.android.sqlite.first;
-
-public class CommentsDataSource {
-
-}

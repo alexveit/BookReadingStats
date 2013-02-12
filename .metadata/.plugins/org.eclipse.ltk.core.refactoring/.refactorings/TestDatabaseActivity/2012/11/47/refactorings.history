@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<session version="1.0">&#x0A;<refactoring comment="Extracts string &apos;null&apos; into R.string.add" description="Extracts string &apos;null&apos; into R.string.add" flags="6" id="com.android.ide.eclipse.adt.refactoring.extract.string" mode="SELECT_NEW_ID" proj="/TestDatabaseActivity" rplc-all-java="false" rplc-all-xml="false" stamp="1353507432109"/>&#x0A;<refactoring comment="Extracts string &apos;null&apos; into R.string.delete" description="Extracts string &apos;null&apos; into R.string.delete" flags="6" id="com.android.ide.eclipse.adt.refactoring.extract.string" mode="SELECT_NEW_ID" proj="/TestDatabaseActivity" rplc-all-java="false" rplc-all-xml="false" stamp="1353507453765"/>
-</session>
