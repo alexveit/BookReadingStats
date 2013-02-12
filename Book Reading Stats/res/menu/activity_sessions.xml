@@ -1,0 +1,22 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <item
+        android:id="@+id/start"
+        android:icon="@drawable/ic_stopwatch"
+        android:orderInCategory="100"
+        android:showAsAction="always|withText"
+        android:title="@string/start"/>
+    <item
+        android:id="@+id/done"
+        android:icon="@android:drawable/ic_menu_save"
+        android:orderInCategory="101"
+        android:showAsAction="always|withText"
+        android:title="@string/done"/>
+    <item
+        android:id="@+id/cancel"
+        android:icon="@drawable/ic_back"
+        android:orderInCategory="102"
+        android:showAsAction="always|withText"
+        android:title="@android:string/cancel"/>
+
+</menu>
