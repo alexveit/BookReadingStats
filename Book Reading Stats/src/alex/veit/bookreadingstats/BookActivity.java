@@ -266,11 +266,16 @@ public class BookActivity extends Activity {
 			_partialText = (TextView) _dialogPartial
 					.findViewById(R.id.textViewPResult);
 
+			final Button calc = (Button) _dialogPartial
+					.findViewById(R.id.buttonCalc);
+			final Button clear = (Button) _dialogPartial
+					.findViewById(R.id.buttonClear);
+			final Button done = (Button) _dialogPartial
+					.findViewById(R.id.buttonDone);
 
-			final TextWatcher twCalc = new TextWatcher() {
-
+			calc.setOnClickListener(new View.OnClickListener() {
 				@Override
-				public void afterTextChanged(final Editable s) {
+				public void onClick(final View v) {
 					if (!_partialEdit.getText().toString().isEmpty()) {
 						final int pages = Integer.parseInt(_partialEdit
 								.getText().toString());
@@ -279,29 +284,7 @@ public class BookActivity extends Activity {
 					}
 
 				}
-
-				@Override
-				public void beforeTextChanged(final CharSequence arg0,
-						final int start, final int count, final int after) {
-					// TODO Auto-generated method stub
-
-				}
-
-				@Override
-				public void onTextChanged(final CharSequence s, final int start,
-						final int before, final int count) {
-					// TODO Auto-generated method stub
-
-				}
-
-			};
-
-			_partialEdit.addTextChangedListener(twCalc);
-			
-			final Button clear = (Button) _dialogPartial
-					.findViewById(R.id.buttonClear);
-			final Button done = (Button) _dialogPartial
-					.findViewById(R.id.buttonDone);
+			});
 
 			clear.setOnClickListener(new View.OnClickListener() {
 				@Override
