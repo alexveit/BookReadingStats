@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:stretchColumns="0,1,2"
+    tools:context=".SessionsActivity" >
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <Chronometer
+            android:id="@+id/chronometer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/zero"
+            android:textSize="100dp"
+            android:layout_span="3" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <Button
+            android:id="@+id/buttonStart"
+            style="?android:attr/buttonStyle"
+            android:layout_height="70dp"
+            android:text="@string/start" />
+
+        <Button
+            android:id="@+id/buttonStop"
+            style="?android:attr/buttonStyle"
+            android:layout_height="70dp"
+            android:enabled="false"
+            android:text="@string/stop" />
+
+        <Button
+            android:id="@+id/buttonDone"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:enabled="false"
+            android:text="@string/done" />
+
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <TextView
+            android:id="@+id/textViewTPages"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/totalPages"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:layout_span="3" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/page"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:layout_span="3" />
+
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <EditText
+            android:id="@+id/editTextPage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:enabled="false"
+            android:inputType="number"
+            android:layout_span="3"
+            android:ems="3"
+            android:textSize="40dp">
+
+            <requestFocus />
+        </EditText>
+
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="70dp"
+            android:text="@android:string/cancel"
+            android:id="@+id/buttonCancel"
+            android:layout_span="2" />
+
+        <Button
+            android:id="@+id/buttonReset"
+            style="?android:attr/buttonStyle"
+            android:layout_height="70dp"
+            android:enabled="false"
+            android:text="@string/reset" />
+
+    </TableRow>
+
+</TableLayout>
