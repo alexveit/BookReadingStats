@@ -93,6 +93,17 @@
             </LinearLayout>
 
             <TextView
+                android:id="@+id/textViewDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/description"
+                android:textStyle="italic" />
+
+            <TextView
                 android:id="@+id/textViewInfo1"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -171,6 +182,47 @@
                 android:layout_marginRight="16dp"
                 android:layout_marginTop="8dp"
                 android:text="@string/info_p8" />
+
+            <TextView
+                android:id="@+id/textViewHowTo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/how_to"
+                android:textStyle="italic" />
+
+            <TextView
+                android:id="@+id/textViewHowTo1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/how_to1" />
+
+            <TextView
+                android:id="@+id/textViewHowTo2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/how_to2" />
+
+            <TextView
+                android:id="@+id/textViewHowTo3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_marginTop="8dp"
+                android:text="@string/how_to3" />
 
         </LinearLayout>
     </ScrollView>

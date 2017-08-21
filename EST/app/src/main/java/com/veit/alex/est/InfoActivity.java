@@ -18,18 +18,21 @@ import java.util.Locale;
 public class InfoActivity extends AppCompatActivity {
 
     private static final int[] INFO_VIEW_ID = {
-            R.id.textViewInfo1, R.id.textViewInfo2,R.id.textViewInfo3,R.id.textViewInfo4,
-            R.id.textViewInfo5,R.id.textViewInfo6,R.id.textViewInfo7,R.id.textViewInfo8
+            R.id.textViewDescription, R.id.textViewInfo1, R.id.textViewInfo2,R.id.textViewInfo3,R.id.textViewInfo4,
+            R.id.textViewInfo5,R.id.textViewInfo6,R.id.textViewInfo7,R.id.textViewInfo8, R.id.textViewHowTo,
+            R.id.textViewHowTo1, R.id.textViewHowTo2, R.id.textViewHowTo3
     };
 
     private static final int[] ENG_INFO = {
-            R.string.info_p1,R.string.info_p2,R.string.info_p3,R.string.info_p4,
-            R.string.info_p5,R.string.info_p6,R.string.info_p7,R.string.info_p8
+            R.string.description, R.string.info_p1,R.string.info_p2,R.string.info_p3,R.string.info_p4,
+            R.string.info_p5,R.string.info_p6,R.string.info_p7,R.string.info_p8,
+            R.string.how_to, R.string.how_to1,R.string.how_to2,R.string.how_to3
     };
 
     private static final int[] POR_INFO = {
-            R.string.info_p1p,R.string.info_p2p,R.string.info_p3p,R.string.info_p4p,
-            R.string.info_p5p,R.string.info_p6p,R.string.info_p7p,R.string.info_p8p
+            R.string.descriptionp, R.string.info_p1p,R.string.info_p2p,R.string.info_p3p,R.string.info_p4p,
+            R.string.info_p5p,R.string.info_p6p,R.string.info_p7p,R.string.info_p8p,
+            R.string.how_top, R.string.how_to1p,R.string.how_to2p,R.string.how_to3p
     };
 
     private static TextView[] infoViews = null;
@@ -49,8 +52,8 @@ public class InfoActivity extends AppCompatActivity {
         TextView priceAmount = (TextView) findViewById(R.id.textViewPriceAmount);
         TextView pricePacageAmount = (TextView) findViewById(R.id.textViewPacagePriceAmount);
 
-        final Animation bounceEng = AnimationUtils.loadAnimation(this, R.anim.fade_in);
-        final Animation bouncePor = AnimationUtils.loadAnimation(this, R.anim.fade_in);
+        final Animation bounceEng = AnimationUtils.loadAnimation(this, R.anim.fade_in_slow);
+        final Animation bouncePor = AnimationUtils.loadAnimation(this, R.anim.fade_in_slow);
         MyBounceInterpolator interpolator = new MyBounceInterpolator(0.2, 20);
 
         bounceEng.setInterpolator(interpolator);
