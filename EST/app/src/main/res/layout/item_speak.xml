@@ -1,87 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+android:layout_width="match_parent"
+android:layout_height="wrap_content">
 
-
-    <TableRow
+    <TableLayout
+        android:id="@+id/table"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:foregroundGravity="center_vertical">
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_margin="8dp">
 
-        <ImageButton
-            android:id="@+id/imageButtonSpeak"
-            android:layout_width="wrap_content"
+        <TableRow
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_margin="4dp"
-            android:background="@null"
-            app:srcCompat="@android:drawable/ic_btn_speak_now" />
+            android:foregroundGravity="center_vertical">
 
-        <TextView
-            android:id="@+id/textViewSenID"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_margin="4dp"
-            android:text="TextView" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal">
 
-        <TextView
-            android:id="@+id/textViewSpeak"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_margin="4dp"
-            android:layout_weight="1"
-            android:maxLines="6"
-            android:text="TextView" />
+                <TextView
+                    android:id="@+id/textViewSenID"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginRight="4dp"
+                    android:layout_weight="1"
+                    android:text="TextView" />
 
-        <ImageView
-            android:id="@+id/imageViewCheck"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_margin="8dp"
-            app:srcCompat="@mipmap/btn_check_green" />
-    </TableRow>
+                <ImageButton
+                    android:id="@+id/imageButtonSenPlay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="8dp"
+                    android:layout_marginLeft="4dp"
+                    android:layout_marginRight="4dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    app:srcCompat="@mipmap/btn_play_disabled_sml" />
 
-    <TableRow
-        android:id="@+id/resRow"
+                <ImageButton
+                    android:id="@+id/imageButtonSpeak"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="4dp"
+                    android:layout_marginRight="4dp"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    app:srcCompat="@android:drawable/ic_btn_speak_now" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/textViewSpeak"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:maxLines="6"
+                android:text="TextView" />
+
+            <ImageView
+                android:id="@+id/imageViewCheck"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/btn_check_green" />
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/resRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="@string/you_said"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textViewResult"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="1"
+                android:maxLines="6"
+                android:text="TextView"
+                android:textStyle="italic" />
+
+            <ImageView
+                android:id="@+id/imageViewEx"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginLeft="4dp"
+                app:srcCompat="@mipmap/ex" />
+
+        </TableRow>
+
+
+    </TableLayout>
+
+    <LinearLayout
+        android:id="@+id/seekLayout"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/table"
+        android:layout_marginBottom="8dp"
+        android:layout_marginRight="8dp"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <SeekBar
+            android:id="@+id/seekBarSen"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1" />
 
         <TextView
-            android:id="@+id/textView4"
+            android:id="@+id/textViewSenProgress"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:layout_span="2"
-            android:text="You said:"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/textViewResult"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_margin="4dp"
-            android:layout_weight="1"
-            android:maxLines="6"
-            android:text="TextView"
-            android:textStyle="italic" />
-
-        <ImageView
-            android:id="@+id/imageViewEx"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_margin="8dp"
-            app:srcCompat="@mipmap/ex" />
-
-    </TableRow>
+            android:text="@string/prog_str" />
+    </LinearLayout>
 
 
-</TableLayout>
+</RelativeLayout>
 

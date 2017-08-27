@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Sudoku Solver</string>
+
+    <string name="one">1</string>
+    <string name="two">2</string>
+    <string name="three">3</string>
+    <string name="four">4</string>
+    <string name="five">5</string>
+    <string name="six">6</string>
+    <string name="seven">7</string>
+    <string name="eight">8</string>
+    <string name="nine">9</string>
+
+    <string name="clear_cell">Clear Cell</string>
+    <string name="clear_grid">Clear Grid</string>
+    <string name="solve">Solve</string>
+    <string name="new_puzzle">New</string>
+
+    <string name="easy">Easy</string>
+    <string name="medium">Medium</string>
+    <string name="hard">Hard</string>
+    <string name="evil">Evil</string>
+
+</resources>

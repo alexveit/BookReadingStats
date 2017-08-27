@@ -6,14 +6,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
-import android.widget.TextView;
-
-import com.veit.alex.est.util.MySpeakListAdapter;
-import com.veit.alex.est.util.Utils;
 
 public class SpeakListActivity extends AppCompatActivity {
 
-    private MySpeakListAdapter mMsla = null;
+    private SpeakListAdapter mMsla = null;
     private boolean mNeedsToWriteFile = false;
     private boolean mFromStoryList = false;
     private int mBookNum = -1;
@@ -42,8 +38,7 @@ public class SpeakListActivity extends AppCompatActivity {
         getSupportActionBar().setTitle(Utils.getStoryTitleString(mBookNum, mStoryNum));
 
         mNeedsToWriteFile = false;
-
-        mMsla = new MySpeakListAdapter(this, (TextView) findViewById(R.id.textViewElapsed),mBookNum, mStoryNum);
+        mMsla = new SpeakListAdapter(this,mBookNum, mStoryNum);
 
         ((ListView) findViewById(R.id.speakListView)).setAdapter(mMsla);
     }
@@ -84,6 +79,12 @@ public class SpeakListActivity extends AppCompatActivity {
         if(mNeedsToWriteFile) {
             Utils.writeToFile(this);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mMsla.destroy();
     }
 
     public void needsToWriteFile() { mNeedsToWriteFile = true; }

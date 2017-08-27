@@ -1,8 +1,10 @@
-package com.veit.alex.est.util;
+package com.veit.alex.est;
 
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.view.View;
+import android.widget.ProgressBar;
 
 import com.veit.alex.est.Book;
 import com.veit.alex.est.MainActivity;
@@ -41,7 +43,7 @@ public class Utils {
 
         private int mBookCount = -1;
         private MainActivity mMainActivity = null;
-        private ProgressDialog mProgressDialog;
+        private ProgressBar mProgressBar;
         private boolean mScanOK;
         private boolean mReadOK;
 
@@ -49,21 +51,11 @@ public class Utils {
 
         private LoadResourcesTask(MainActivity mainActivity, int bookCount) {
             mMainActivity = mainActivity;
+            mProgressBar = (ProgressBar)mainActivity.findViewById(R.id.resProgressBar);
             mBookCount = bookCount;
+            mProgressBar.setMax(bookCount);
             mProgress = 0;
 
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-
-            mProgressDialog = new ProgressDialog(mMainActivity);
-            mProgressDialog.setTitle("English Story Times (BR)");
-            mProgressDialog.setMessage("Loading Resources");
-            mProgressDialog.setMax(mBookCount);
-            mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            mProgressDialog.show();
         }
 
         @Override
@@ -114,6 +106,7 @@ public class Utils {
                     String[] urlsThumb = new String[titles.size()];
                     String[] urlsImage = new String[titles.size()];
                     String[] urlsMp3 = new String[titles.size()];
+                    String[][] urlsSenMp3 = new String[titles.size()][];
 
                     String tempUrl = mMainActivity.getResources()
                             .getString(R.string.site) + bookNumForURLString + "/b"
@@ -128,9 +121,20 @@ public class Utils {
                         urlsThumb[storyNum] = finalUrl + "thumb.jpg";
                         urlsImage[storyNum] = finalUrl + ".jpg";
                         urlsMp3[storyNum] = finalUrl + ".mp3";
+
+                        int senCount = sentences.get(storyNum).size();
+                        urlsSenMp3[storyNum] = new String[senCount];
+                        String finalUrlSen = finalUrl +"sentences/sen";
+
+                        for(int senNum = 0; senNum < senCount; senNum++) {
+                            urlsSenMp3[storyNum][senNum] =
+                                    finalUrlSen + ((senNum + 1) < 10 ? "0" : "")
+                                            + (senNum + 1) + ".mp3";
+                        }
+
                     }
 
-                    mBooks.add(new Book(titles, sentences, urlsThumb, urlsImage, urlsMp3));
+                    mBooks.add(new Book(titles, sentences, urlsThumb, urlsImage, urlsMp3, urlsSenMp3));
                     mProgress =  mBooks.size() * 0.9;
                     publishProgress((int)mProgress);
                 } else {
@@ -149,14 +153,15 @@ public class Utils {
 
         @Override
         protected void onProgressUpdate(Integer... progress) {
-            mProgressDialog.setProgress(progress[0]);
+            mProgressBar.setProgress(progress[0]);
         }
 
         @Override
         protected void onPostExecute(final Void result) {
             super.onPostExecute(result);
-            mProgressDialog.dismiss();
+            mProgressBar.setVisibility(View.GONE);
             if(mScanOK && mReadOK) {
+                mMainActivity.enableBookButtons();
                 mMainActivity.updateUI();
             }
             else {
@@ -177,6 +182,7 @@ public class Utils {
                 int lastBookNum = 0;
 
                 double progressIncrement = (mBooks.size() - mProgress) / mBooks.size();
+
 
                 while(input.length() > 0) {
 
@@ -366,6 +372,10 @@ public class Utils {
 
     public static ArrayList<String> getStorySentences(int bookNum, int storyNum) {
         return mBooks.get(bookNum).getStorySentences(storyNum);
+    }
+
+    public static String getSentenceMp3URL(int bookNum, int storyNum, int senNum) {
+        return mBooks.get(bookNum).getSentenceMp3URL(storyNum,senNum);
     }
 
     public static void LoadResources(MainActivity mainActivity, int bookCount) {

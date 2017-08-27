@@ -8,13 +8,10 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import com.veit.alex.est.util.MyStoryListAdapter;
-import com.veit.alex.est.util.Utils;
-
 
 public class StoryListActivity extends AppCompatActivity {
 
-    private MyStoryListAdapter mMsla = null;
+    private StoryListAdapter mMsla = null;
 
     private int mBookNum = -1;
 
@@ -39,7 +36,7 @@ public class StoryListActivity extends AppCompatActivity {
 
         ListView storyListView = (ListView) findViewById(R.id.storyListView);
 
-        mMsla = new MyStoryListAdapter(this, mBookNum);
+        mMsla = new StoryListAdapter(this, mBookNum);
 
         storyListView.setAdapter(mMsla);
 

@@ -1,4 +1,4 @@
-package com.veit.alex.est.util;
+package com.veit.alex.est;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -13,15 +13,16 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.veit.alex.est.R;
 import com.veit.alex.est.StoryListActivity;
+import com.veit.alex.est.Utils;
 
 import java.util.ArrayList;
 
-public class MyStoryListAdapter extends BaseAdapter {
+public class StoryListAdapter extends BaseAdapter {
 
     private static class ViewHolder {
-        private TextView mText;
-        private ImageView mPassed;
+        private TextView mTitle;
         private ImageView mThumb;
+        private ImageView mCheck;
     }
 
     private LayoutInflater mInflater = null;
@@ -35,9 +36,9 @@ public class MyStoryListAdapter extends BaseAdapter {
     private Animation mAnimBounce = null;
     private Animation mAnimFade = null;
     private Animation.AnimationListener mFadeAnimListener = null;
-    private ViewHolder mHolder = null;
+    private ImageView mLastCheckSelected = null;
 
-    public MyStoryListAdapter(StoryListActivity a, int bookNum) {
+    public StoryListAdapter(StoryListActivity a, int bookNum) {
 
         mStoryListActivity = a;
         mBookNum = bookNum;
@@ -56,7 +57,7 @@ public class MyStoryListAdapter extends BaseAdapter {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                mHolder.mPassed.setVisibility(View.INVISIBLE);
+                mLastCheckSelected.setVisibility(View.INVISIBLE);
             }
 
             @Override
@@ -79,43 +80,42 @@ public class MyStoryListAdapter extends BaseAdapter {
     @Override
     public View getView(int storyNum, View convertView, ViewGroup parent) {
 
+        //ImageView passed;
         ViewHolder holder;
-
         if(convertView == null) {
-
             convertView = mInflater.inflate(R.layout.item_story, null);
-
             holder = new ViewHolder();
-            holder.mText = (TextView) convertView.findViewById(R.id.textViewStory);
-            holder.mPassed = (ImageView) convertView.findViewById(R.id.imageViewPassed);
             holder.mThumb = (ImageView) convertView.findViewById(R.id.imageViewThumb);
+            holder.mTitle = (TextView) convertView.findViewById(R.id.textViewStory);
+            holder.mCheck = (ImageView) convertView.findViewById(R.id.imageViewPassed);
             convertView.setTag(holder);
         } else {
-            holder = (ViewHolder)convertView.getTag();
+            holder = (ViewHolder) convertView.getTag();
         }
+
+        holder.mTitle.setText(mTitles.get(storyNum));
 
         Glide.with(mStoryListActivity)
                 .load(mUrlsThumb[storyNum])
                 .override((int)mWidth,(int)mHeight)
                 .into(holder.mThumb);
 
-        holder.mText.setText(mTitles.get(storyNum));
-
         if(Utils.hasPassedAllStorySentences(mBookNum, storyNum)) {
-            holder.mPassed.setVisibility(View.VISIBLE);
+            holder.mCheck.setVisibility(View.VISIBLE);
             if(!mCheckHasFadedIn[storyNum]) {
-                holder.mPassed.startAnimation(mAnimBounce);
+                holder.mCheck.startAnimation(mAnimBounce);
                 mCheckHasFadedIn[storyNum] = true;
             }
         } else {
             if(mCheckHasFadedIn[storyNum]) {
-                mHolder = holder;
-                holder.mPassed.startAnimation(mAnimFade);
+                mLastCheckSelected = holder.mCheck;
+                holder.mCheck.startAnimation(mAnimFade);
                 mCheckHasFadedIn[storyNum] = false;
             } else {
-                holder.mPassed.setVisibility(View.INVISIBLE);
+                holder.mCheck.setVisibility(View.INVISIBLE);
             }
         }
+
         return convertView;
     }
 }

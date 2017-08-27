@@ -10,7 +10,6 @@ import android.view.animation.AnimationUtils;
 import android.widget.TextView;
 
 import com.veit.alex.est.internetLibs.MyBounceInterpolator;
-import com.veit.alex.est.util.Utils;
 
 import java.util.Currency;
 import java.util.Locale;

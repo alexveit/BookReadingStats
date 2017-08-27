@@ -1,7 +1,5 @@
 package com.veit.alex.est;
 
-import com.veit.alex.est.util.Utils;
-
 import java.util.ArrayList;
 
 /**
@@ -21,17 +19,19 @@ public class Book {
     private String[] mUrlsThumb = null;
     private String[] mUrlsImage = null;
     private String[] mUrlsMp3 = null;
+    private String[][] mUrlsSenMp3 = null;
 
     private int[] mStoryProgressTime = null;
 
     public Book(ArrayList<String> titles, ArrayList<ArrayList<String>> sentences,
-            String[] urlsThumb, String[] urlsImage, String[] urlsMp3) {
+            String[] urlsThumb, String[] urlsImage, String[] urlsMp3, String[][] urlsSenMp3) {
 
         mTitles = titles;
         mSentences = sentences;
         mUrlsImage = urlsImage;
         mUrlsThumb = urlsThumb;
         mUrlsMp3 = urlsMp3;
+        mUrlsSenMp3 = urlsSenMp3;
 
         mStoryProgressTime = new int[titles.size()];
         mPassed = new ArrayList<>();
@@ -68,6 +68,10 @@ public class Book {
         sec = prog;
 
         return Utils.getZerofiedNum(min) + ":" + Utils.getZerofiedNum(sec);
+    }
+
+    public String getSentenceMp3URL(int storyNum, int sentenceNum) {
+        return mUrlsSenMp3[storyNum][sentenceNum];
     }
 
     public void setPassed(int storyNum, int sentenceNum, boolean passed) {
