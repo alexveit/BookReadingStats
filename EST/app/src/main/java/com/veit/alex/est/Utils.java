@@ -159,7 +159,6 @@ public class Utils {
         @Override
         protected void onPostExecute(final Void result) {
             super.onPostExecute(result);
-            mProgressBar.setVisibility(View.GONE);
             if(mScanOK && mReadOK) {
                 mMainActivity.enableBookButtons();
                 mMainActivity.updateUI();
@@ -247,14 +246,14 @@ public class Utils {
         }
     }
 
-    private static class WriteToFile extends AsyncTask<Void, Void, Void> {
+    private static class WriteToFile extends AsyncTask {
 
         private SpeakListActivity mSpeakListActivity = null;
 
         private WriteToFile(SpeakListActivity mainActivity) { mSpeakListActivity = mainActivity; }
 
         @Override
-        protected Void doInBackground(Void... params) {
+        protected Void doInBackground(Object[] params) {
 
             StringBuilder fileString = new StringBuilder();
 
