@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(./gradlew assembleDebug:*)",
+      "Bash(curl:*)",
+      "Bash(chmod:*)",
+      "Bash(cmd.exe /c \"gradlew.bat assembleDebug\")",
+      "Bash(cmd.exe /c \"where java\")",
+      "Bash(cmd.exe /c:*)",
+      "Bash(JAVA_HOME=\"/mnt/c/Program Files/Android/Android Studio/jbr\" ./gradlew:*)",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\alex\\\\Documents\\\\Programming Code\\\\BookReadingStats''; $env:JAVA_HOME=''C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr''; .\\\\gradlew.bat assembleDebug\")",
+      "Bash(powershell.exe -Command \"cd ''C:\\\\Users\\\\alex\\\\Documents\\\\Programming Code\\\\BookReadingStats''; $env:JAVA_HOME=''C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr''; .\\\\gradlew.bat clean\")",
+      "Bash(powershell.exe -Command \"$env:Path += '';C:\\\\Users\\\\alex\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools''; adb -s R5CX738DSQJ install -r ''C:\\\\Users\\\\alex\\\\Documents\\\\Programming Code\\\\BookReadingStats\\\\app\\\\build\\\\outputs\\\\apk\\\\debug\\\\app-debug.apk''\")",
+      "Bash(powershell.exe -Command \"$env:Path += '';C:\\\\Users\\\\alex\\\\AppData\\\\Local\\\\Android\\\\Sdk\\\\platform-tools''; adb -s R5CX738DSQJ shell am start -n com.bookstats/.MainActivity\")",
+      "Bash(powershell.exe -Command \"cd ''''C:\\\\Users\\\\alex\\\\Documents\\\\Programming Code\\\\BookReadingStats''''; $env:JAVA_HOME=''''C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr''''; .\\\\gradlew.bat assembleDebug\")",
+      "Bash(powershell.exe -Command \"cd ''''''''C:\\\\Users\\\\alex\\\\Documents\\\\Programming Code\\\\BookReadingStats''''''''; $env:JAVA_HOME=''''''''C:\\\\Program Files\\\\Android\\\\Android Studio\\\\jbr''''''''; .\\\\gradlew.bat assembleDebug\")",
+      "Bash(JAVA_HOME=\"/mnt/c/Program Files/Android/Android Studio/jbr\" /mnt/c/Users/alex/Documents/Programming Code/BookReadingStats/gradlew:*)",
+      "Bash(powershell.exe -Command:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}

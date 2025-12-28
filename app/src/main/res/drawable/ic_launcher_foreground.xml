@@ -1,0 +1,81 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Progress ring background (subtle) - fits within safe zone -->
+    <path
+        android:pathData="M54,26 A28,28 0 1,1 53.99,26"
+        android:strokeWidth="5"
+        android:strokeColor="#4a3880"
+        android:strokeAlpha="0.5"
+        android:fillColor="#00000000"/>
+    
+    <!-- Progress ring (75% complete) - fits within safe zone -->
+    <path
+        android:pathData="M54,26 A28,28 0 1,1 26.2,48"
+        android:strokeWidth="5"
+        android:strokeColor="#4CAF50"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"/>
+    
+    <!-- Open book - left page -->
+    <path
+        android:pathData="M54,38 L54,72 Q44,70 34,72 L34,40 Q44,38 54,38"
+        android:fillColor="#ffffff"
+        android:fillAlpha="0.95"/>
+    
+    <!-- Open book - right page -->
+    <path
+        android:pathData="M54,38 L54,72 Q64,70 74,72 L74,40 Q64,38 54,38"
+        android:fillColor="#f0f0f0"
+        android:fillAlpha="0.95"/>
+    
+    <!-- Book spine/center line -->
+    <path
+        android:pathData="M54,38 L54,72"
+        android:strokeWidth="2"
+        android:strokeColor="#6750A4"
+        android:fillColor="#00000000"/>
+    
+    <!-- Page lines - left -->
+    <path
+        android:pathData="M39,47 L51,45.5"
+        android:strokeWidth="1.5"
+        android:strokeColor="#9e9e9e"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"/>
+    <path
+        android:pathData="M39,53 L51,51.5"
+        android:strokeWidth="1.5"
+        android:strokeColor="#9e9e9e"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"/>
+    <path
+        android:pathData="M39,59 L51,57.5"
+        android:strokeWidth="1.5"
+        android:strokeColor="#9e9e9e"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"/>
+    
+    <!-- Page lines - right -->
+    <path
+        android:pathData="M57,45.5 L69,47"
+        android:strokeWidth="1.5"
+        android:strokeColor="#9e9e9e"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"/>
+    <path
+        android:pathData="M57,51.5 L69,53"
+        android:strokeWidth="1.5"
+        android:strokeColor="#9e9e9e"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"/>
+    <path
+        android:pathData="M57,57.5 L69,59"
+        android:strokeWidth="1.5"
+        android:strokeColor="#9e9e9e"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"/>
+</vector>
