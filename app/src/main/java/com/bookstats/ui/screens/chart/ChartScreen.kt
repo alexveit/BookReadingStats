@@ -417,14 +417,13 @@ private fun BarChartView(
                 }
                 
                 // Date label (show every few bars to avoid crowding)
-                if (displayData.indexOf(dayData) % 3 == 0) {
-                    Text(
-                        text = dayData.date.takeLast(5), // MM-DD
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
+                // Always render the text to maintain consistent bar alignment
+                Text(
+                    text = if (displayData.indexOf(dayData) % 3 == 0) dayData.date.takeLast(5) else "",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
         }
     }
