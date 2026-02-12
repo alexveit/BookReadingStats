@@ -13,7 +13,7 @@ data class Book(
     val id: Long = 0,
     val title: String,
     val author: String = "",
-    val category: String = "",
+    val categories: List<Category> = emptyList(),
     val totalPages: Int,
     val notes: String = "",
     val coverImageUrl: String? = null,
@@ -21,6 +21,12 @@ data class Book(
     val updatedAt: Instant = Instant.now(),
     val sessions: List<ReadingSession> = emptyList()
 ) {
+    /**
+     * Categories formatted as a comma-separated string.
+     */
+    val categoriesFormatted: String
+        get() = categories.joinToString(", ") { it.name }
+
     /**
      * Whether the book has a cover image.
      */

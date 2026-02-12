@@ -2,7 +2,7 @@ package com.bookstats.ui.screens.statistics
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bookstats.domain.model.ChartType
+import com.bookstats.domain.model.CategoryStatistics
 import com.bookstats.domain.model.DailyChartData
 import com.bookstats.domain.model.ReadingStatistics
 import com.bookstats.domain.repository.BookRepository
@@ -24,16 +24,17 @@ class StatisticsViewModel @Inject constructor(
     
     private val _chartData = MutableStateFlow<List<DailyChartData>>(emptyList())
     val chartData: StateFlow<List<DailyChartData>> = _chartData.asStateFlow()
-    
-    private val _chartType = MutableStateFlow(ChartType.PAGES)
-    val chartType: StateFlow<ChartType> = _chartType.asStateFlow()
-    
+
+    private val _categoryStatistics = MutableStateFlow<List<CategoryStatistics>>(emptyList())
+    val categoryStatistics: StateFlow<List<CategoryStatistics>> = _categoryStatistics.asStateFlow()
+
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-    
+
     init {
         observeStatistics()
         observeChartData()
+        observeCategoryStatistics()
     }
     
     private fun observeStatistics() {
@@ -52,11 +53,15 @@ class StatisticsViewModel @Inject constructor(
             }
         }
     }
-    
-    fun setChartType(type: ChartType) {
-        _chartType.value = type
+
+    private fun observeCategoryStatistics() {
+        viewModelScope.launch {
+            repository.getCategoryStatistics().collect { stats ->
+                _categoryStatistics.value = stats
+            }
+        }
     }
-    
+
     suspend fun exportData(): String {
         return repository.exportToJson()
     }

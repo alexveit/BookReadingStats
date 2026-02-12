@@ -7,8 +7,11 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.bookstats.data.local.database.converter.Converters
 import com.bookstats.data.local.database.dao.BookDao
+import com.bookstats.data.local.database.dao.CategoryDao
 import com.bookstats.data.local.database.dao.ReadingSessionDao
+import com.bookstats.data.local.database.entity.BookCategoryEntity
 import com.bookstats.data.local.database.entity.BookEntity
+import com.bookstats.data.local.database.entity.CategoryEntity
 import com.bookstats.data.local.database.entity.ReadingSessionEntity
 
 /**
@@ -17,16 +20,19 @@ import com.bookstats.data.local.database.entity.ReadingSessionEntity
 @Database(
     entities = [
         BookEntity::class,
-        ReadingSessionEntity::class
+        ReadingSessionEntity::class,
+        CategoryEntity::class,
+        BookCategoryEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class BookDatabase : RoomDatabase() {
-    
+
     abstract fun bookDao(): BookDao
     abstract fun readingSessionDao(): ReadingSessionDao
+    abstract fun categoryDao(): CategoryDao
     
     companion object {
         const val DATABASE_NAME = "book_stats_db"
@@ -110,6 +116,47 @@ abstract class BookDatabase : RoomDatabase() {
                 // Add indices to reading_sessions table
                 database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_reading_sessions_remote_id ON reading_sessions(remote_id)")
                 database.execSQL("CREATE INDEX IF NOT EXISTS index_reading_sessions_sync_status ON reading_sessions(sync_status)")
+            }
+        }
+
+        /**
+         * Migration from version 7 to 8: Add categories table and book_categories junction table.
+         */
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Create categories table
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS categories (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        name TEXT NOT NULL
+                    )
+                """)
+                database.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS index_categories_name ON categories(name)")
+
+                // Create book_categories junction table
+                database.execSQL("""
+                    CREATE TABLE IF NOT EXISTS book_categories (
+                        book_id INTEGER NOT NULL,
+                        category_id INTEGER NOT NULL,
+                        PRIMARY KEY(book_id, category_id),
+                        FOREIGN KEY(book_id) REFERENCES books(id) ON DELETE CASCADE,
+                        FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE
+                    )
+                """)
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_book_categories_book_id ON book_categories(book_id)")
+                database.execSQL("CREATE INDEX IF NOT EXISTS index_book_categories_category_id ON book_categories(category_id)")
+
+                // Migrate existing category data from books table to new tables
+                database.execSQL("""
+                    INSERT OR IGNORE INTO categories (name)
+                    SELECT DISTINCT category FROM books WHERE category != ''
+                """)
+                database.execSQL("""
+                    INSERT OR IGNORE INTO book_categories (book_id, category_id)
+                    SELECT b.id, c.id FROM books b
+                    INNER JOIN categories c ON b.category = c.name
+                    WHERE b.category != ''
+                """)
             }
         }
     }

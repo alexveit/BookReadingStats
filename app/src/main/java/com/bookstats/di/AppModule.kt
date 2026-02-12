@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.work.WorkManager
 import com.bookstats.data.local.database.BookDatabase
 import com.bookstats.data.local.database.dao.BookDao
+import com.bookstats.data.local.database.dao.CategoryDao
 import com.bookstats.data.local.database.dao.ReadingSessionDao
 import com.bookstats.data.remote.GoogleBooksApi
 import com.bookstats.data.remote.SupabaseDataSource
@@ -43,7 +44,8 @@ object DatabaseModule {
             BookDatabase.MIGRATION_3_4,
             BookDatabase.MIGRATION_4_5,
             BookDatabase.MIGRATION_5_6,
-            BookDatabase.MIGRATION_6_7
+            BookDatabase.MIGRATION_6_7,
+            BookDatabase.MIGRATION_7_8
         )
         // Note: No fallbackToDestructiveMigration() - never silently delete user data.
         // Always write proper migrations when schema changes.
@@ -60,6 +62,12 @@ object DatabaseModule {
     @Singleton
     fun provideReadingSessionDao(database: BookDatabase): ReadingSessionDao {
         return database.readingSessionDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCategoryDao(database: BookDatabase): CategoryDao {
+        return database.categoryDao()
     }
 
     @Provides

@@ -2,6 +2,8 @@ package com.bookstats.domain.repository
 
 import com.bookstats.data.sync.SyncState
 import com.bookstats.domain.model.Book
+import com.bookstats.domain.model.Category
+import com.bookstats.domain.model.CategoryStatistics
 import com.bookstats.domain.model.DailyChartData
 import com.bookstats.domain.model.ReadingSession
 import com.bookstats.domain.model.ReadingStatistics
@@ -33,10 +35,18 @@ interface BookRepository {
     suspend fun updateSession(session: ReadingSession)
     suspend fun deleteSession(sessionId: Long)
     
+    // Category operations
+    fun getAllCategories(): Flow<List<Category>>
+    suspend fun getOrCreateCategories(names: List<String>): List<Category>
+    suspend fun insertCategory(name: String): Long
+    suspend fun deleteCategory(categoryId: Long)
+    suspend fun updateBookCategories(bookId: Long, categoryIds: List<Long>)
+
     // Statistics
     fun getReadingStatistics(): Flow<ReadingStatistics>
     fun getDailyChartData(): Flow<List<DailyChartData>>
     fun getDailyChartDataForBook(bookId: Long): Flow<List<DailyChartData>>
+    fun getCategoryStatistics(): Flow<List<CategoryStatistics>>
     
     // For book merging
     suspend fun mergeBooks(targetBookId: Long, sourceBookIds: List<Long>)

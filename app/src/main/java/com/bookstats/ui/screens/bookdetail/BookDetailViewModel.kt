@@ -8,6 +8,7 @@ import com.bookstats.data.remote.GoogleBooksApi
 import com.bookstats.domain.model.Book
 import com.bookstats.domain.model.ReadingSession
 import com.bookstats.domain.repository.BookRepository
+import android.util.Log
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -25,6 +26,10 @@ class BookDetailViewModel @Inject constructor(
 ) : ViewModel() {
     
     private val bookId: Long = savedStateHandle.get<Long>("bookId") ?: -1L
+
+    companion object {
+        private const val TAG = "BookDetailViewModel"
+    }
     
     private val _uiState = MutableStateFlow<BookDetailUiState>(BookDetailUiState.Loading)
     val uiState: StateFlow<BookDetailUiState> = _uiState.asStateFlow()
@@ -64,12 +69,15 @@ class BookDetailViewModel @Inject constructor(
             _coverSearchResults.value = emptyList()
             return
         }
-        
+
         viewModelScope.launch {
             _isSearchingCovers.value = true
             try {
-                _coverSearchResults.value = googleBooksApi.searchByTitle(title, maxResults = 8)
+                val results = googleBooksApi.searchByTitle(title, maxResults = 8)
+                _coverSearchResults.value = results
+                Log.d(TAG, "Cover search for '$title': ${results.size} results")
             } catch (e: Exception) {
+                Log.e(TAG, "Cover search failed for '$title'", e)
                 _coverSearchResults.value = emptyList()
             } finally {
                 _isSearchingCovers.value = false
@@ -98,7 +106,7 @@ class BookDetailViewModel @Inject constructor(
     fun updateBook(
         title: String,
         author: String,
-        category: String,
+        categoryString: String,
         totalPages: Int,
         notes: String,
         coverImageUrl: String?
@@ -107,10 +115,20 @@ class BookDetailViewModel @Inject constructor(
             val currentState = _uiState.value
             if (currentState is BookDetailUiState.Success) {
                 try {
+                    // Convert comma-separated category string to Category objects
+                    val categoryNames = categoryString.split(",")
+                        .map { it.trim() }
+                        .filter { it.isNotBlank() }
+                    val categories = if (categoryNames.isNotEmpty()) {
+                        repository.getOrCreateCategories(categoryNames)
+                    } else {
+                        emptyList()
+                    }
+
                     val updatedBook = currentState.book.copy(
                         title = title,
                         author = author,
-                        category = category,
+                        categories = categories,
                         totalPages = totalPages,
                         notes = notes,
                         coverImageUrl = coverImageUrl

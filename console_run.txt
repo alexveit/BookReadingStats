@@ -1,0 +1,6 @@
+$env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
+.\gradlew.bat assembleDebug
+adb -s R5CX738DSQJ install -r app\build\outputs\apk\debug\app-debug.apk
+adb -s R5CX738DSQJ shell am start -n com.bookstats/.MainActivity
+
+adb -s R5CX738DSQJ shell am force-stop com.bookstats

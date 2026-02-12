@@ -1,6 +1,5 @@
 package com.bookstats.ui.screens.books
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -20,6 +20,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.bookstats.data.remote.BookCoverResult
+import com.bookstats.domain.model.Category
 import kotlinx.coroutines.launch
 
 /**
@@ -44,15 +47,18 @@ fun AddBookScreen(
 ) {
     var title by remember { mutableStateOf("") }
     var author by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("") }
+    var selectedCategories by remember { mutableStateOf<List<Category>>(emptyList()) }
+    var newCategoryText by remember { mutableStateOf("") }
     var totalPages by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var coverImageUrl by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     var showCoverSearch by remember { mutableStateOf(false) }
-    
+
     val coverSearchResults by viewModel.coverSearchResults.collectAsStateWithLifecycle()
     val isSearchingCovers by viewModel.isSearchingCovers.collectAsStateWithLifecycle()
+    val coverSearchError by viewModel.coverSearchError.collectAsStateWithLifecycle()
+    val allCategories by viewModel.allCategories.collectAsStateWithLifecycle()
     
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -62,25 +68,28 @@ fun AddBookScreen(
         // Use thumbnailUrl directly - it's what we displayed in search results, so we KNOW it works
         // The high-res URLs with zoom=2 modifications often fail with placeholder images
         coverImageUrl = cover.thumbnailUrl ?: cover.coverUrl
-        
+
         // Auto-fill title with the full book title from Google Books
         title = cover.title
-        
+
         // Auto-fill author if empty
         if (author.isBlank() && cover.authorsFormatted.isNotBlank()) {
             author = cover.authorsFormatted
         }
-        
-        // Auto-fill category if empty
-        if (category.isBlank() && cover.primaryCategory.isNotBlank()) {
-            category = cover.primaryCategory
+
+        // Auto-fill categories if empty and available from Google Books
+        if (selectedCategories.isEmpty() && cover.categories.isNotEmpty()) {
+            scope.launch {
+                val categories = viewModel.getOrCreateCategories(cover.categories)
+                selectedCategories = categories
+            }
         }
-        
+
         // Auto-fill page count if empty and available
         if (totalPages.isBlank() && cover.pageCount != null && cover.pageCount > 0) {
             totalPages = cover.pageCount.toString()
         }
-        
+
         // Auto-fill notes with description if empty
         if (notes.isBlank() && !cover.description.isNullOrBlank()) {
             // Truncate very long descriptions
@@ -91,7 +100,7 @@ fun AddBookScreen(
                 desc
             }
         }
-        
+
         showCoverSearch = false
         viewModel.clearCoverSearch()
     }
@@ -138,7 +147,7 @@ fun AddBookScreen(
                                 val bookId = viewModel.addBook(
                                     title = title,
                                     author = author,
-                                    category = category,
+                                    categories = selectedCategories,
                                     totalPages = pages,
                                     notes = notes,
                                     coverImageUrl = coverImageUrl
@@ -285,6 +294,12 @@ fun AddBookScreen(
                                     )
                                 }
                             }
+                        } else if (!isSearchingCovers && coverSearchError != null) {
+                            Text(
+                                text = coverSearchError ?: "",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.error
+                            )
                         } else if (!isSearchingCovers && title.length >= 3) {
                             Text(
                                 text = stringResource(R.string.no_covers_found),
@@ -321,18 +336,30 @@ fun AddBookScreen(
                 }
             )
 
-            // Category field
-            OutlinedTextField(
-                value = category,
-                onValueChange = { category = it },
-                label = { Text(stringResource(R.string.category_optional)) },
-                placeholder = { Text(stringResource(R.string.category_hint)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading,
-                leadingIcon = {
-                    Icon(Icons.Default.Category, contentDescription = null)
-                }
+            // Category selector
+            CategorySelector(
+                selectedCategories = selectedCategories,
+                allCategories = allCategories,
+                newCategoryText = newCategoryText,
+                onNewCategoryTextChange = { newCategoryText = it },
+                onCategorySelected = { category ->
+                    if (category !in selectedCategories) {
+                        selectedCategories = selectedCategories + category
+                    }
+                },
+                onCategoryRemoved = { category ->
+                    selectedCategories = selectedCategories - category
+                },
+                onCreateCategory = {
+                    if (newCategoryText.isNotBlank()) {
+                        scope.launch {
+                            val newCategory = viewModel.createCategory(newCategoryText)
+                            selectedCategories = selectedCategories + newCategory
+                            newCategoryText = ""
+                        }
+                    }
+                },
+                enabled = !isLoading
             )
 
             // Total pages field
@@ -429,6 +456,120 @@ private fun CoverSearchResultItem(
                 text = "${result.pageCount} pages",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun CategorySelector(
+    selectedCategories: List<Category>,
+    allCategories: List<Category>,
+    newCategoryText: String,
+    onNewCategoryTextChange: (String) -> Unit,
+    onCategorySelected: (Category) -> Unit,
+    onCategoryRemoved: (Category) -> Unit,
+    onCreateCategory: () -> Unit,
+    enabled: Boolean
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    val availableCategories = allCategories.filter { it !in selectedCategories }
+
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Category,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.categories_label),
+                    style = MaterialTheme.typography.titleSmall
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Selected categories as chips
+            if (selectedCategories.isNotEmpty()) {
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    selectedCategories.forEach { category ->
+                        InputChip(
+                            selected = true,
+                            onClick = { onCategoryRemoved(category) },
+                            label = { Text(category.name) },
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = stringResource(R.string.remove),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            enabled = enabled
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Available categories to select
+            if (availableCategories.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.tap_to_add),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    availableCategories.forEach { category ->
+                        SuggestionChip(
+                            onClick = { onCategorySelected(category) },
+                            label = { Text(category.name) },
+                            enabled = enabled
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Add new category
+            OutlinedTextField(
+                value = newCategoryText,
+                onValueChange = onNewCategoryTextChange,
+                label = { Text(stringResource(R.string.add_new_category)) },
+                placeholder = { Text(stringResource(R.string.category_hint)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = enabled,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        onCreateCategory()
+                        keyboardController?.hide()
+                    }
+                ),
+                trailingIcon = {
+                    if (newCategoryText.isNotBlank()) {
+                        IconButton(onClick = onCreateCategory) {
+                            Icon(Icons.Default.Add, stringResource(R.string.add))
+                        }
+                    }
+                }
             )
         }
     }

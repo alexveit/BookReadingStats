@@ -4,8 +4,11 @@ import android.content.Context
 import androidx.room.withTransaction
 import com.bookstats.data.local.database.BookDatabase
 import com.bookstats.data.local.database.dao.BookDao
+import com.bookstats.data.local.database.dao.CategoryDao
 import com.bookstats.data.local.database.dao.ReadingSessionDao
+import com.bookstats.data.local.database.entity.BookCategoryEntity
 import com.bookstats.data.local.database.entity.BookEntity
+import com.bookstats.data.local.database.entity.CategoryEntity
 import com.bookstats.data.local.database.entity.ReadingSessionEntity
 import com.bookstats.data.local.database.entity.SyncStatus
 import com.bookstats.data.remote.SupabaseDataSource
@@ -16,6 +19,8 @@ import com.bookstats.data.sync.SyncManager
 import com.bookstats.data.sync.SyncState
 import com.bookstats.data.sync.SyncWorker
 import com.bookstats.domain.model.Book
+import com.bookstats.domain.model.Category
+import com.bookstats.domain.model.CategoryStatistics
 import com.bookstats.domain.model.DailyChartData
 import com.bookstats.domain.model.ReadingSession
 import com.bookstats.domain.model.ReadingStatistics
@@ -48,6 +53,7 @@ class BookRepositoryImpl @Inject constructor(
     private val database: BookDatabase,
     private val bookDao: BookDao,
     private val sessionDao: ReadingSessionDao,
+    private val categoryDao: CategoryDao,
     private val remoteDataSource: SupabaseDataSource,
     private val authRepository: AuthRepository,
     private val syncManager: SyncManager
@@ -99,10 +105,14 @@ class BookRepositoryImpl @Inject constructor(
         // Use combine for reactive updates when database changes
         return combine(
             bookDao.getAllBooks(),
-            sessionDao.getAllSessions()
-        ) { books, sessions ->
+            sessionDao.getAllSessions(),
+            categoryDao.getAllCategories()
+        ) { books, sessions, _ ->
             val sessionsByBook = sessions.groupBy { it.bookId }
-            books.map { it.toBook(sessionsByBook[it.id] ?: emptyList()) }
+            books.map { book ->
+                val categories = categoryDao.getCategoriesForBookList(book.id)
+                book.toBook(sessionsByBook[book.id] ?: emptyList(), categories)
+            }
         }.onStart {
             // Try to sync from remote on first collection
             val userId = authRepository.getCurrentUserId()
@@ -121,19 +131,24 @@ class BookRepositoryImpl @Inject constructor(
     override fun getBookById(bookId: Long): Flow<Book?> {
         return combine(
             bookDao.getBookByIdFlow(bookId),
-            sessionDao.getSessionsForBook(bookId)
-        ) { book, sessions ->
-            book?.toBook(sessions)
+            sessionDao.getSessionsForBook(bookId),
+            categoryDao.getCategoriesForBook(bookId)
+        ) { book, sessions, categories ->
+            book?.toBook(sessions, categories)
         }.flowOn(Dispatchers.IO)
     }
-    
+
     override fun searchBooks(query: String): Flow<List<Book>> {
         return combine(
             bookDao.searchBooks(query),
-            sessionDao.getAllSessions()
-        ) { books, sessions ->
+            sessionDao.getAllSessions(),
+            categoryDao.getAllCategories()
+        ) { books, sessions, _ ->
             val sessionsByBook = sessions.groupBy { it.bookId }
-            books.map { it.toBook(sessionsByBook[it.id] ?: emptyList()) }
+            books.map { book ->
+                val categories = categoryDao.getCategoriesForBookList(book.id)
+                book.toBook(sessionsByBook[book.id] ?: emptyList(), categories)
+            }
         }.flowOn(Dispatchers.IO)
     }
     
@@ -142,7 +157,7 @@ class BookRepositoryImpl @Inject constructor(
         val localEntity = BookEntity(
             title = book.title,
             author = book.author,
-            category = book.category,
+            category = book.categoriesFormatted, // Keep for backwards compatibility
             totalPages = book.totalPages,
             notes = book.notes,
             coverImageUrl = book.coverImageUrl,
@@ -151,7 +166,16 @@ class BookRepositoryImpl @Inject constructor(
             syncStatus = SyncStatus.PENDING_CREATE
         )
         val localId = bookDao.insertBook(localEntity)
-        
+
+        // Save categories
+        if (book.categories.isNotEmpty()) {
+            val categoryIds = book.categories.map { it.id }
+            val bookCategories = categoryIds.map { categoryId ->
+                BookCategoryEntity(bookId = localId, categoryId = categoryId)
+            }
+            categoryDao.insertBookCategories(bookCategories)
+        }
+
         // Try to sync immediately if online
         val userId = authRepository.getCurrentUserId()
         if (userId != null && syncManager.isOnline()) {
@@ -160,7 +184,7 @@ class BookRepositoryImpl @Inject constructor(
                     userId = userId,
                     title = book.title,
                     author = book.author,
-                    category = book.category,
+                    category = book.categoriesFormatted,
                     totalPages = book.totalPages,
                     notes = book.notes,
                     coverImageUrl = book.coverImageUrl
@@ -178,18 +202,18 @@ class BookRepositoryImpl @Inject constructor(
             // Schedule sync for when we're back online
             scheduleSync()
         }
-        
+
         localId
     }
     
     override suspend fun updateBook(book: Book) = withContext(Dispatchers.IO) {
         val existingBook = bookDao.getBookById(book.id) ?: return@withContext
-        
+
         // Update locally
         val updatedEntity = existingBook.copy(
             title = book.title,
             author = book.author,
-            category = book.category,
+            category = book.categoriesFormatted, // Keep for backwards compatibility
             totalPages = book.totalPages,
             notes = book.notes,
             coverImageUrl = book.coverImageUrl,
@@ -201,7 +225,16 @@ class BookRepositoryImpl @Inject constructor(
             }
         )
         bookDao.updateBook(updatedEntity)
-        
+
+        // Update categories - clear existing and add new ones
+        categoryDao.deleteBookCategories(book.id)
+        if (book.categories.isNotEmpty()) {
+            val bookCategories = book.categories.map { category ->
+                BookCategoryEntity(bookId = book.id, categoryId = category.id)
+            }
+            categoryDao.insertBookCategories(bookCategories)
+        }
+
         // Try to sync immediately if online and already synced before
         val userId = authRepository.getCurrentUserId()
         if (userId != null && existingBook.remoteId != null && syncManager.isOnline()) {
@@ -209,7 +242,7 @@ class BookRepositoryImpl @Inject constructor(
                 val updateDto = BookUpdateDto(
                     title = book.title,
                     author = book.author,
-                    category = book.category,
+                    category = book.categoriesFormatted,
                     totalPages = book.totalPages,
                     notes = book.notes,
                     coverImageUrl = book.coverImageUrl
@@ -409,30 +442,100 @@ class BookRepositoryImpl @Inject constructor(
         return sessionDao.getAllSessions().map { sessions ->
             sessions.groupBy { session ->
                 LocalDate.ofInstant(session.startTime, ZoneId.systemDefault())
-            }.map { (date, daySessions) ->
+            }.toSortedMap().map { (date, daySessions) ->
                 DailyChartData(
                     date = date.format(DateTimeFormatter.ofPattern("MM/dd")),
                     pagesRead = daySessions.sumOf { it.endPage - it.startPage },
                     minutesRead = daySessions.sumOf { it.durationSeconds / 60 }
                 )
-            }.sortedBy { it.date }
+            }
         }
     }
-    
+
     override fun getDailyChartDataForBook(bookId: Long): Flow<List<DailyChartData>> {
         return sessionDao.getSessionsForBook(bookId).map { sessions ->
             sessions.groupBy { session ->
                 LocalDate.ofInstant(session.startTime, ZoneId.systemDefault())
-            }.map { (date, daySessions) ->
+            }.toSortedMap().map { (date, daySessions) ->
                 DailyChartData(
                     date = date.format(DateTimeFormatter.ofPattern("MM/dd")),
                     pagesRead = daySessions.sumOf { it.endPage - it.startPage },
                     minutesRead = daySessions.sumOf { it.durationSeconds / 60 }
                 )
-            }.sortedBy { it.date }
+            }
         }
     }
-    
+
+    override fun getCategoryStatistics(): Flow<List<CategoryStatistics>> {
+        return combine(
+            bookDao.getAllBooks(),
+            sessionDao.getAllSessions(),
+            categoryDao.getAllCategories()
+        ) { books, sessions, categories ->
+            val sessionsByBook = sessions.groupBy { it.bookId }
+            val booksWithSessions = books.map { book ->
+                val bookCategories = categoryDao.getCategoriesForBookList(book.id)
+                book.toBook(sessionsByBook[book.id] ?: emptyList(), bookCategories)
+            }
+
+            categories.map { categoryEntity ->
+                val category = Category(id = categoryEntity.id, name = categoryEntity.name)
+                val booksInCategory = booksWithSessions.filter { book ->
+                    book.categories.any { it.id == categoryEntity.id }
+                }
+                CategoryStatistics(
+                    category = category,
+                    bookCount = booksInCategory.size,
+                    totalPagesRead = booksInCategory.sumOf { it.pagesRead },
+                    totalMinutesRead = booksInCategory.sumOf { it.totalMinutesRead },
+                    pagesRemaining = booksInCategory.sumOf { it.pagesRemaining },
+                    sessionCount = booksInCategory.sumOf { it.sessions.size }
+                )
+            }.sortedByDescending { it.totalMinutesRead }
+        }
+    }
+
+    // ============================================
+    // CATEGORIES
+    // ============================================
+
+    override fun getAllCategories(): Flow<List<Category>> {
+        return categoryDao.getAllCategories().map { categories ->
+            categories.map { Category(id = it.id, name = it.name) }
+        }
+    }
+
+    override suspend fun getOrCreateCategories(names: List<String>): List<Category> = withContext(Dispatchers.IO) {
+        names.map { name ->
+            val trimmedName = name.trim()
+            val existing = categoryDao.getCategoryByName(trimmedName)
+            if (existing != null) {
+                Category(id = existing.id, name = existing.name)
+            } else {
+                val id = categoryDao.insertCategory(CategoryEntity(name = trimmedName))
+                Category(id = id, name = trimmedName)
+            }
+        }
+    }
+
+    override suspend fun insertCategory(name: String): Long = withContext(Dispatchers.IO) {
+        val trimmedName = name.trim()
+        val existing = categoryDao.getCategoryByName(trimmedName)
+        existing?.id ?: categoryDao.insertCategory(CategoryEntity(name = trimmedName))
+    }
+
+    override suspend fun deleteCategory(categoryId: Long) = withContext(Dispatchers.IO) {
+        categoryDao.deleteCategoryById(categoryId)
+    }
+
+    override suspend fun updateBookCategories(bookId: Long, categoryIds: List<Long>) = withContext(Dispatchers.IO) {
+        categoryDao.deleteBookCategories(bookId)
+        val bookCategories = categoryIds.map { categoryId ->
+            BookCategoryEntity(bookId = bookId, categoryId = categoryId)
+        }
+        categoryDao.insertBookCategories(bookCategories)
+    }
+
     // ============================================
     // MERGE BOOKS
     // ============================================
@@ -576,11 +679,14 @@ class BookRepositoryImpl @Inject constructor(
         syncStatus = SyncStatus.SYNCED
     )
     
-    private fun BookEntity.toBook(sessions: List<ReadingSessionEntity>) = Book(
+    private fun BookEntity.toBook(
+        sessions: List<ReadingSessionEntity>,
+        categories: List<CategoryEntity> = emptyList()
+    ) = Book(
         id = this.id,
         title = this.title,
         author = this.author,
-        category = this.category,
+        categories = categories.map { Category(id = it.id, name = it.name) },
         totalPages = this.totalPages,
         notes = this.notes,
         coverImageUrl = this.coverImageUrl,

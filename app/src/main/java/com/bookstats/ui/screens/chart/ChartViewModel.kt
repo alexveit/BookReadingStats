@@ -4,7 +4,6 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bookstats.domain.model.Book
-import com.bookstats.domain.model.ChartType
 import com.bookstats.domain.model.DailyChartData
 import com.bookstats.domain.repository.BookRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -28,9 +27,6 @@ class ChartViewModel @Inject constructor(
 
     private val _chartData = MutableStateFlow<List<DailyChartData>>(emptyList())
     val chartData: StateFlow<List<DailyChartData>> = _chartData.asStateFlow()
-
-    // Persisted across process death
-    val chartType: StateFlow<ChartType> = savedStateHandle.getStateFlow(KEY_CHART_TYPE, ChartType.PAGES)
 
     // Persisted across process death (1 = daily, 7 = weekly)
     val aggregationDays: StateFlow<Int> = savedStateHandle.getStateFlow(KEY_AGGREGATION_DAYS, 1)
@@ -57,10 +53,6 @@ class ChartViewModel @Inject constructor(
         }
     }
     
-    fun setChartType(type: ChartType) {
-        savedStateHandle[KEY_CHART_TYPE] = type
-    }
-
     fun setAggregationDays(days: Int) {
         savedStateHandle[KEY_AGGREGATION_DAYS] = days
         viewModelScope.launch {
@@ -71,7 +63,6 @@ class ChartViewModel @Inject constructor(
     }
 
     companion object {
-        private const val KEY_CHART_TYPE = "chartType"
         private const val KEY_AGGREGATION_DAYS = "aggregationDays"
     }
     

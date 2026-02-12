@@ -75,6 +75,11 @@
     <string name="enter_author_name">Enter the author\'s name</string>
     <string name="category_optional">Category/Genre (optional)</string>
     <string name="category_hint">e.g., Fiction, Science, History</string>
+    <string name="categories_label">Categories</string>
+    <string name="tap_to_add">Tap to add:</string>
+    <string name="add_new_category">Add new category</string>
+    <string name="remove">Remove</string>
+    <string name="add">Add</string>
     <string name="total_pages">Total Pages</string>
     <string name="enter_total_pages">Enter total number of pages</string>
     <string name="notes_optional">Notes/Description (optional)</string>
@@ -165,6 +170,8 @@
     <string name="time">Time</string>
     <string name="last_n_days">Last %1$d days</string>
     <string name="chart_type">Chart Type</string>
+    <string name="reading_by_category">Reading by Category</string>
+    <string name="n_books">%1$d books</string>
 
     <!-- Chart Screen -->
     <string name="daily">Daily</string>

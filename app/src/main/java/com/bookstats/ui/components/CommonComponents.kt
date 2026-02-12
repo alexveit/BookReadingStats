@@ -18,10 +18,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.bookstats.R
 import com.bookstats.domain.model.Book
+import com.bookstats.domain.model.DailyChartData
 import com.bookstats.domain.model.ReadingStatus
 import com.bookstats.ui.theme.FinishedGreen
 import com.bookstats.ui.theme.InProgressYellow
@@ -265,5 +269,95 @@ fun LoadingIndicator(
         contentAlignment = Alignment.Center
     ) {
         CircularProgressIndicator()
+    }
+}
+
+/**
+ * Reusable bar chart for displaying reading progress (pages and time).
+ * Shows bars evenly spaced with an optional date range summary.
+ */
+@Composable
+fun ReadingBarChart(
+    data: List<DailyChartData>,
+    modifier: Modifier = Modifier,
+    maxBarHeight: Dp = 180.dp,
+    showDateRangeSummary: Boolean = false,
+    maxDataPoints: Int = 14
+) {
+    val displayData = data.takeLast(maxDataPoints)
+
+    if (displayData.isEmpty()) {
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(R.string.no_data_yet),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        return
+    }
+
+    val maxPages by remember(displayData) {
+        derivedStateOf { displayData.maxOfOrNull { it.pagesRead }?.coerceAtLeast(1) ?: 1 }
+    }
+    val maxMinutes by remember(displayData) {
+        derivedStateOf { displayData.maxOfOrNull { it.minutesRead }?.coerceAtLeast(1) ?: 1 }
+    }
+
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.Bottom
+        ) {
+            displayData.forEach { dayData ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.Bottom,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    // Pages bar
+                    val pagesHeight = (dayData.pagesRead.toFloat() / maxPages * maxBarHeight.value).coerceAtLeast(4f)
+                    Surface(
+                        modifier = Modifier
+                            .width(8.dp)
+                            .height(pagesHeight.dp),
+                        color = FinishedGreen,
+                        shape = MaterialTheme.shapes.small
+                    ) {}
+
+                    // Time bar
+                    val timeHeight = (dayData.minutesRead.toFloat() / maxMinutes * maxBarHeight.value).coerceAtLeast(4f)
+                    Surface(
+                        modifier = Modifier
+                            .width(8.dp)
+                            .height(timeHeight.dp),
+                        color = InProgressYellow,
+                        shape = MaterialTheme.shapes.small
+                    ) {}
+                }
+            }
+        }
+
+        // Date range summary
+        if (showDateRangeSummary && displayData.isNotEmpty()) {
+            val firstDate = displayData.first().date
+            val lastDate = displayData.last().date
+            val summaryText = if (firstDate == lastDate) {
+                firstDate
+            } else {
+                "$firstDate - $lastDate"
+            }
+            Text(
+                text = summaryText,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
     }
 }

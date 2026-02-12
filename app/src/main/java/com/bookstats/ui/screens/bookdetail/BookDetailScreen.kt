@@ -258,7 +258,7 @@ private fun BookDetailContent(
                             }
                         }
                         
-                        if (book.category.isNotBlank()) {
+                        if (book.categories.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(4.dp))
                             Row(
                                 verticalAlignment = Alignment.CenterVertically
@@ -271,7 +271,7 @@ private fun BookDetailContent(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = book.category,
+                                    text = book.categoriesFormatted,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -553,7 +553,7 @@ private fun EditBookDialog(
 ) {
     var title by remember { mutableStateOf(book.title) }
     var author by remember { mutableStateOf(book.author) }
-    var category by remember { mutableStateOf(book.category) }
+    var category by remember { mutableStateOf(book.categoriesFormatted) }
     var totalPages by remember { mutableStateOf(book.totalPages.toString()) }
     var notes by remember { mutableStateOf(book.notes) }
     var coverImageUrl by remember { mutableStateOf(book.coverImageUrl) }
@@ -571,8 +571,8 @@ private fun EditBookDialog(
         }
         
         // Auto-fill category if empty
-        if (category.isBlank() && cover.primaryCategory.isNotBlank()) {
-            category = cover.primaryCategory
+        if (category.isBlank() && cover.categoriesFormatted.isNotBlank()) {
+            category = cover.categoriesFormatted
         }
         
         // Auto-fill page count if empty and available

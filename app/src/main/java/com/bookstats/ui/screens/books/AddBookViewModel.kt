@@ -5,13 +5,17 @@ import androidx.lifecycle.viewModelScope
 import com.bookstats.data.remote.BookCoverResult
 import com.bookstats.data.remote.GoogleBooksApi
 import com.bookstats.domain.model.Book
+import com.bookstats.domain.model.Category
 import com.bookstats.domain.repository.BookRepository
+import android.util.Log
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -36,7 +40,27 @@ class AddBookViewModel @Inject constructor(
     private val _selectedCover = MutableStateFlow<BookCoverResult?>(null)
     val selectedCover: StateFlow<BookCoverResult?> = _selectedCover.asStateFlow()
 
+    // Categories
+    val allCategories: StateFlow<List<Category>> = repository.getAllCategories()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     private var searchJob: Job? = null
+
+    /**
+     * Get or create categories from a list of names.
+     * Used when auto-filling from Google Books.
+     */
+    suspend fun getOrCreateCategories(names: List<String>): List<Category> {
+        return repository.getOrCreateCategories(names)
+    }
+
+    /**
+     * Create a new category with the given name.
+     */
+    suspend fun createCategory(name: String): Category {
+        val id = repository.insertCategory(name)
+        return Category(id = id, name = name.trim())
+    }
 
     /**
      * Search for book covers by title with debounce.
@@ -59,11 +83,14 @@ class AddBookViewModel @Inject constructor(
 
             _isSearchingCovers.value = true
             try {
-                _coverSearchResults.value = googleBooksApi.searchByTitle(title, maxResults = MAX_COVER_RESULTS)
+                val results = googleBooksApi.searchByTitle(title, maxResults = MAX_COVER_RESULTS)
+                _coverSearchResults.value = results
                 _coverSearchError.value = null
+                Log.d(TAG, "Cover search for '$title': ${results.size} results")
             } catch (e: Exception) {
+                Log.e(TAG, "Cover search failed for '$title'", e)
                 _coverSearchResults.value = emptyList()
-                _coverSearchError.value = "Failed to search covers. Check your connection."
+                _coverSearchError.value = "Search failed: ${e.message ?: "Check your connection."}"
             } finally {
                 _isSearchingCovers.value = false
                 searchJob = null
@@ -116,7 +143,7 @@ class AddBookViewModel @Inject constructor(
     suspend fun addBook(
         title: String,
         author: String,
-        category: String,
+        categories: List<Category>,
         totalPages: Int,
         notes: String,
         coverImageUrl: String?
@@ -124,7 +151,7 @@ class AddBookViewModel @Inject constructor(
         val book = Book(
             title = title.trim().take(MAX_TITLE_LENGTH),
             author = author.trim().take(MAX_AUTHOR_LENGTH),
-            category = category.trim().take(MAX_CATEGORY_LENGTH),
+            categories = categories,
             totalPages = totalPages.coerceIn(1, MAX_PAGE_COUNT),
             notes = notes.trim().take(MAX_NOTES_LENGTH),
             coverImageUrl = coverImageUrl?.take(MAX_URL_LENGTH)
@@ -133,6 +160,7 @@ class AddBookViewModel @Inject constructor(
     }
 
     companion object {
+        private const val TAG = "AddBookViewModel"
         const val SEARCH_DEBOUNCE_MS = 300L
         const val MAX_COVER_RESULTS = 8
         const val MIN_SEARCH_LENGTH = 3

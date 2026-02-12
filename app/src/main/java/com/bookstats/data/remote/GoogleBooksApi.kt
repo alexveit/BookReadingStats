@@ -41,37 +41,33 @@ class GoogleBooksApi @Inject constructor() {
      * @return List of book cover results, or empty list on error
      */
     suspend fun searchByTitle(title: String, maxResults: Int = 5): List<BookCoverResult> {
-        return try {
-            // Ktor automatically URL-encodes parameters, handling special characters properly
-            val response: GoogleBooksResponse = client.get(
-                "https://www.googleapis.com/books/v1/volumes"
-            ) {
-                parameter("q", "intitle:$title")
-                parameter("maxResults", maxResults.coerceIn(1, 40))
-                parameter("printType", "books")
-            }.body()
-            
-            response.items?.mapNotNull { item ->
-                val volumeInfo = item.volumeInfo ?: return@mapNotNull null
-                val imageLinks = volumeInfo.imageLinks ?: return@mapNotNull null
-                
-                // Get the best available cover URL
-                val coverUrl = getBestCoverUrl(imageLinks)
-                    ?: return@mapNotNull null
-                
-                BookCoverResult(
-                    title = volumeInfo.title ?: "Unknown",
-                    authors = volumeInfo.authors ?: emptyList(),
-                    pageCount = volumeInfo.pageCount,
-                    description = volumeInfo.description,
-                    categories = volumeInfo.categories ?: emptyList(),
-                    thumbnailUrl = imageLinks.smallThumbnail?.toHttps(),
-                    coverUrl = coverUrl
-                )
-            } ?: emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        // Ktor automatically URL-encodes parameters, handling special characters properly
+        val response: GoogleBooksResponse = client.get(
+            "https://www.googleapis.com/books/v1/volumes"
+        ) {
+            parameter("q", "intitle:$title")
+            parameter("maxResults", maxResults.coerceIn(1, 40))
+            parameter("printType", "books")
+        }.body()
+
+        return response.items?.mapNotNull { item ->
+            val volumeInfo = item.volumeInfo ?: return@mapNotNull null
+            val imageLinks = volumeInfo.imageLinks ?: return@mapNotNull null
+
+            // Get the best available cover URL
+            val coverUrl = getBestCoverUrl(imageLinks)
+                ?: return@mapNotNull null
+
+            BookCoverResult(
+                title = volumeInfo.title ?: "Unknown",
+                authors = volumeInfo.authors ?: emptyList(),
+                pageCount = volumeInfo.pageCount,
+                description = volumeInfo.description,
+                categories = volumeInfo.categories ?: emptyList(),
+                thumbnailUrl = imageLinks.smallThumbnail?.toHttps(),
+                coverUrl = coverUrl
+            )
+        } ?: emptyList()
     }
     
     /**

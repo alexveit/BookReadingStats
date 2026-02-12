@@ -11,20 +11,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bookstats.R
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.bookstats.domain.model.ChartType
 import com.bookstats.domain.model.DailyChartData
 import com.bookstats.ui.components.EmptyState
 import com.bookstats.ui.components.LoadingIndicator
+import com.bookstats.ui.components.ReadingBarChart
 import com.bookstats.ui.theme.FinishedGreen
 import com.bookstats.ui.theme.InProgressYellow
-import com.bookstats.ui.theme.ReadingBlue
 
 /**
  * Screen showing reading progress charts for a specific book.
@@ -37,7 +35,6 @@ fun ChartScreen(
 ) {
     val book by viewModel.book.collectAsStateWithLifecycle()
     val chartData by viewModel.chartData.collectAsStateWithLifecycle()
-    val chartType by viewModel.chartType.collectAsStateWithLifecycle()
     val aggregationDays by viewModel.aggregationDays.collectAsStateWithLifecycle()
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     
@@ -137,45 +134,6 @@ fun ChartScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Chart type selector
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        SingleChoiceSegmentedButtonRow {
-                            SegmentedButton(
-                                selected = chartType == ChartType.PAGES,
-                                onClick = { viewModel.setChartType(ChartType.PAGES) },
-                                shape = SegmentedButtonDefaults.itemShape(
-                                    index = 0,
-                                    count = 3
-                                )
-                            ) {
-                                Text(stringResource(R.string.pages))
-                            }
-                            SegmentedButton(
-                                selected = chartType == ChartType.TIME,
-                                onClick = { viewModel.setChartType(ChartType.TIME) },
-                                shape = SegmentedButtonDefaults.itemShape(
-                                    index = 1,
-                                    count = 3
-                                )
-                            ) {
-                                Text(stringResource(R.string.time))
-                            }
-                            SegmentedButton(
-                                selected = chartType == ChartType.BOTH,
-                                onClick = { viewModel.setChartType(ChartType.BOTH) },
-                                shape = SegmentedButtonDefaults.itemShape(
-                                    index = 2,
-                                    count = 3
-                                )
-                            ) {
-                                Text(stringResource(R.string.both))
-                            }
-                        }
-                    }
-                    
                     // Main chart
                     Card(
                         modifier = Modifier.fillMaxWidth()
@@ -183,41 +141,66 @@ fun ChartScreen(
                         Column(
                             modifier = Modifier.padding(16.dp)
                         ) {
-                            Text(
-                                text = when (chartType) {
-                                    ChartType.PAGES -> stringResource(R.string.pages_read_label)
-                                    ChartType.TIME -> stringResource(R.string.time_spent)
-                                    ChartType.BOTH -> stringResource(R.string.pages_and_time)
-                                },
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.pages_and_time),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+
+                                // Legend
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Surface(
+                                            modifier = Modifier.size(8.dp),
+                                            color = FinishedGreen,
+                                            shape = MaterialTheme.shapes.small
+                                        ) {}
+                                        Text(
+                                            text = stringResource(R.string.pages),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Surface(
+                                            modifier = Modifier.size(8.dp),
+                                            color = InProgressYellow,
+                                            shape = MaterialTheme.shapes.small
+                                        ) {}
+                                        Text(
+                                            text = stringResource(R.string.time),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            BarChartView(
+                            ReadingBarChart(
                                 data = chartData,
-                                chartType = chartType,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(250.dp)
+                                    .height(250.dp),
+                                maxBarHeight = 180.dp,
+                                showDateRangeSummary = true,
+                                maxDataPoints = 14
                             )
-
-                            // Legend
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 16.dp),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                if (chartType == ChartType.PAGES || chartType == ChartType.BOTH) {
-                                    LegendItem(color = FinishedGreen, label = stringResource(R.string.pages))
-                                    Spacer(modifier = Modifier.width(24.dp))
-                                }
-                                if (chartType == ChartType.TIME || chartType == ChartType.BOTH) {
-                                    LegendItem(color = ReadingBlue, label = stringResource(R.string.minutes))
-                                }
-                            }
                         }
                     }
                     
@@ -355,98 +338,6 @@ fun ChartScreen(
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun BarChartView(
-    data: List<DailyChartData>,
-    chartType: ChartType,
-    modifier: Modifier = Modifier
-) {
-    val displayData = data.takeLast(14) // Show last 14 data points
-    
-    if (displayData.isEmpty()) return
-    
-    val maxPages = displayData.maxOfOrNull { it.pagesRead }?.coerceAtLeast(1) ?: 1
-    val maxMinutes = displayData.maxOfOrNull { it.minutesRead }?.coerceAtLeast(1) ?: 1
-    
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.Bottom
-    ) {
-        displayData.forEach { dayData ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Bottom,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight()
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.Bottom,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if (chartType == ChartType.PAGES || chartType == ChartType.BOTH) {
-                        val pagesHeight = (dayData.pagesRead.toFloat() / maxPages * 180).coerceAtLeast(4f)
-                        Surface(
-                            modifier = Modifier
-                                .width(if (chartType == ChartType.BOTH) 6.dp else 12.dp)
-                                .height(pagesHeight.dp),
-                            color = FinishedGreen,
-                            shape = MaterialTheme.shapes.small
-                        ) {}
-                    }
-                    
-                    if (chartType == ChartType.BOTH) {
-                        Spacer(modifier = Modifier.width(2.dp))
-                    }
-                    
-                    if (chartType == ChartType.TIME || chartType == ChartType.BOTH) {
-                        val timeHeight = (dayData.minutesRead.toFloat() / maxMinutes * 180).coerceAtLeast(4f)
-                        Surface(
-                            modifier = Modifier
-                                .width(if (chartType == ChartType.BOTH) 6.dp else 12.dp)
-                                .height(timeHeight.dp),
-                            color = ReadingBlue,
-                            shape = MaterialTheme.shapes.small
-                        ) {}
-                    }
-                }
-                
-                // Date label (show every few bars to avoid crowding)
-                // Always render the text to maintain consistent bar alignment
-                Text(
-                    text = if (displayData.indexOf(dayData) % 3 == 0) dayData.date.takeLast(5) else "",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun LegendItem(
-    color: Color,
-    label: String
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Surface(
-            modifier = Modifier.size(12.dp),
-            color = color,
-            shape = MaterialTheme.shapes.small
-        ) {}
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium
-        )
     }
 }
 
